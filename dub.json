@@ -1,0 +1,39 @@
+{
+	"authors": [
+		"Filip Malczak"
+	],
+	"configurations": [
+		{
+			"name": "run",
+			"targetType": "executable"
+		},
+		{
+			"_dflags": [
+				"-v"
+			],
+			"name": "unittest",
+			"preGenerateCommands": [
+				"bash -cex '[ -d test ] && rdmd generate_index.d test || exit 0'"
+			],
+			"sourcePaths": [
+				"test"
+			],
+			"targetType": "executable",
+			"versions": [
+				"aggressive"
+			]
+		}
+	],
+	"copyright": "Copyright © 2019, Filip",
+	"dependencies": {
+		"mirror": "~>0.1.9",
+		"poodinis": "~>8.0.3",
+		"poodinis-proper-d-injector": "~>0.1.0"
+	},
+	"description": "autoscanning + vibe.d + poodinis + mirror",
+	"license": "Apache 2.0",
+	"name": "glue-d",
+	"preGenerateCommands": [
+		"rdmd generate_index.d source"
+	]
+}

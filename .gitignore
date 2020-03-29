@@ -22,3 +22,9 @@ docs/
 
 # Code coverage
 *.lst
+
+#############################################
+
+#_index.d generated files
+
+**/_index.d
