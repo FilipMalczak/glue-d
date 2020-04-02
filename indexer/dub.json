@@ -1,0 +1,21 @@
+{
+	"authors": [
+		"Filip Malczak"
+	],
+	"sourceFiles": [ "generate_index.d" ],
+	"configurations": [
+		{
+			"name": "run",
+			"targetType": "executable",
+			"versions": [ "executable" ]
+		},
+		{
+			"name": "lib",
+			"targetType": "sourceLibrary"
+		}
+	],
+	"copyright": "Copyright © 2020, Filip Malczak",
+	"description": "autoscanning implementation",
+	"license": "Apache 2.0",
+	"name": "indexer"
+}

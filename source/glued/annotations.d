@@ -1,14 +1,8 @@
 module glued.annotations;
 
 import std.conv;
-import std.array;
 import std.traits;
 import std.meta;
-import std.typecons;
-import std.variant;
-import std.range;
-import std.algorithm;
-import std.string;
 
 //todo Ive prepared all that while Im not sure its useful...
 
@@ -240,8 +234,8 @@ unittest {
 }
 
 template getAnnotations(alias M, T) {
-    enum ofType(alias X) = (is(typeof(X) == T));
-    alias getAnnotations = Filter!(ofType, getAnnotations!M);
+    import glued.utils: ofType;
+    alias getAnnotations = Filter!(ofType!T, getAnnotations!M);
 }
 
 enum hasAnnotation(alias M, T) = getAnnotations!(M, T).length > 0;

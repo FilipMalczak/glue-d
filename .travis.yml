@@ -1,1 +1,4 @@
 language: d
+
+install:
+    - "dub run --config=indexer --compiler=${DC}"

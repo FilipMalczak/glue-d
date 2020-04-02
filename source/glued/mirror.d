@@ -12,14 +12,19 @@ template import_(string module_, string name){
     alias import_=result;
 }
 
-Aggregate aggregate(string m, string n)(){
+LocatedAggregate aggregate(string m, string n)(){
     alias mod = module_!(m);
     static foreach (Aggregate a; mod.aggregates)
         if (a.identifier == n)
-            return a;
-    return Aggregate.init; //todo?
+            return LocatedAggregate(m, a);
+    return LocatedAggregate.init; //todo?
 }
 
-Aggregate aggregate(A)(){
+LocatedAggregate aggregate(A)(){
     return aggregate!(moduleName!A, A.stringof)();
+}
+
+struct LocatedAggregate {
+    string moduleName;
+    Aggregate aggregate;
 }

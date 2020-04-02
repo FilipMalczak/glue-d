@@ -4,36 +4,39 @@
 	],
 	"configurations": [
 		{
-			"name": "run",
-			"targetType": "executable"
-		},
-		{
-			"_dflags": [
-				"-v"
-			],
 			"name": "unittest",
-			"preGenerateCommands": [
-				"bash -cex '[ -d test ] && rdmd generate_index.d test || exit 0'"
-			],
 			"sourcePaths": [
 				"test"
 			],
 			"targetType": "executable",
 			"versions": [
-				"aggressive"
+				"glued_debug"
 			]
+		},
+		{
+			"dependencies": {
+				"glue-d:indexer": ">=0.0.0"
+			},
+			"mainSourceFile": "index_entrypoint.d",
+			"name": "indexer",
+			"sourceFiles": [
+				"index_entrypoint.d"
+			],
+			"targetType": "executable"
 		}
 	],
-	"copyright": "Copyright © 2019, Filip",
+	"copyright": "Copyright © 2019, Filip Malczak",
 	"dependencies": {
 		"mirror": "~>0.1.9",
 		"poodinis": "~>8.0.3",
-		"poodinis-proper-d-injector": "~>0.1.0"
+		"poodinis-proper-d-injector": "~>0.1.0",
+		"unit-threaded": "~>0.10.8"
 	},
 	"description": "autoscanning + vibe.d + poodinis + mirror",
 	"license": "Apache 2.0",
 	"name": "glue-d",
-	"preGenerateCommands": [
-		"rdmd generate_index.d source"
-	]
+	"subPackages": [
+		"./indexer/"
+	],
+	"targetType": "library"
 }

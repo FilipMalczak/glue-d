@@ -1,24 +1,12 @@
 module glued.context;
 
-import std.stdio;
-import std.conv;
-import std.array;
-import std.ascii;
-import std.random;
-import std.traits;
-import std.meta;
-import std.typecons;
 import std.variant;
-import std.range;
-import std.algorithm;
-import std.string;
 
 import glued.annotations;
 import glued.stereotypes;
 import glued.mirror;
 
-//import witchcraft;
-
+//todo is this a good idea?
 template Root(T) if (is(T == class)) {
     struct Root { 
         private static T instance;
@@ -57,21 +45,24 @@ mixin template HasSingleton() {
 
 struct StereotypeDefinition(S) if (is(S == struct)) {
     S stereotype;
-    Aggregate target;
+    LocatedAggregate target;
 }
 
 class BackboneContext {
     mixin HasSingleton;
     
-    private Aggregate[] _tracked;
-    private Variant[][Aggregate] _stereotypes;
+    private LocatedAggregate[] _tracked;
+    private Variant[][LocatedAggregate] _stereotypes;
     
     void track(string m, string n)() {
+        version(glued_debug) {
+            pragma(msg, "Tracking ", m, "::", n);
+        }
         alias aggr = import_!(m, n);
-        pragma(msg, "track req ", m, " ", n);
-        pragma(msg, aggr);
-        static if (qualifiesForTracking!aggr()){
-            pragma(msg, "MANAGED ", fullyQualifiedName!(aggr));
+        static if (qualifiesForTracking!(aggr)()){
+            version(glued_debug) {
+                pragma(msg, "qualifies!");
+            }
             auto a = aggregate!(m, n)();
             _tracked ~= a;
             
@@ -85,12 +76,12 @@ class BackboneContext {
     }
     
     @property
-    public Aggregate[] tracked(){
+    public LocatedAggregate[] tracked(){
         return this._tracked;
     }
     
     @property
-    public Variant[][Aggregate] stereotypes(){
+    public Variant[][LocatedAggregate] stereotypes(){
         return this._stereotypes;
     }
     

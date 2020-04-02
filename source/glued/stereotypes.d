@@ -3,6 +3,7 @@ module glued.stereotypes;
 import std.meta;
 
 import glued.annotations;
+import glued.utils;
 
 struct Tracked {}
 
@@ -40,4 +41,15 @@ unittest {
 
 alias getStereotypes(alias M) = Filter!(isStereotype, getAnnotations!M);
 
+template getStereotype(alias M, S) {
+    alias found = Filter!(ofType!S, getStereotypes!M);
+    static assert(found.length < 2);
+    static if (found.length) {
+        enum getStereotype = found[0];
+    } else {
+        enum getStereotype = None();
+    }
+    
+};
 
+enum isMarkedAsStereotype(alias M, S) = (getStereotype!(M, S) != None());
