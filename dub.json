@@ -9,7 +9,7 @@
 				"test"
 			],
 			"targetType": "executable",
-			"versions": [
+			"_versions": [
 				"glued_debug"
 			]
 		},
