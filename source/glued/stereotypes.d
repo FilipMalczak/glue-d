@@ -2,7 +2,7 @@ module glued.stereotypes;
 
 import std.meta;
 
-import glued.annotations;
+public import glued.annotations;
 import glued.utils;
 
 struct Tracked {}
@@ -15,29 +15,24 @@ struct Stereotype {}
 @Implies!Tracked
 struct Component {}
 
+//import poodinis.context: PoodinisComponent = Component;
+
+//template isStereotype(S) if (is(S == PoodinisComponent)) {
+//    enum isStereotype = true;
+//}
+//template isStereotype(alias S) if (is(typeof(S) == PoodinisComponent)) {
+//    enum isStereotype = true;
+//}
+
 enum isStereotype(S) = (is(S == struct) && hasAnnotation!(S, Stereotype));
 enum isStereotype(alias S) = (is(typeof(S) == struct) && hasAnnotation!(typeof(S), Stereotype));
 
-version(unittest){
-    struct NonStereotype {}
-    
-    @Component
-    struct SpecializedComponent {}
-    
-    @Component
-    interface SomeComponent {}
-    
-    @SpecializedComponent
-    interface ComplicatedComponent {}
-}
-
-unittest {
-    static assert(isStereotype!Component);
-    static assert(!isStereotype!NonStereotype);
-    static assert(isStereotype!SpecializedComponent);
-    static assert(!isStereotype!SomeComponent);
-    static assert(!isStereotype!ComplicatedComponent);
-}
+//template getAnnotations(T) if (is(T == PoodinisComponent)) {
+//    alias getAnnotations = AliasSeq!(Tracked());
+//}
+//template getAnnotations(alias T) if (is(T == PoodinisComponent)){
+//    alias getAnnotations = AliasSeq!(Tracked());
+//}
 
 alias getStereotypes(alias M) = Filter!(isStereotype, getAnnotations!M);
 

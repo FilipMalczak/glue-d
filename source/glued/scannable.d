@@ -51,7 +51,7 @@ Scannable fromRoot(string moduleName, string qualifier="", string testQualifier=
     return Scannable(parts[0], qualifier, testQualifier);
 }
 
-enum from(T, string qualifier="", string testQualifier="test") = fromRoot(moduleName!T, qualifier, testQualifier);
+enum fromRoot(T, string qualifier="", string testQualifier="test") = fromRoot(moduleName!T, qualifier, testQualifier);
 
-enum here(string qualifier="", string testQualifier="test") = from(__FUNCTION__, qualifier, testQualifier);
+enum fromRoot(string qualifier="", string testQualifier="test", string foo=__FUNCTION__) = from(foo, qualifier, testQualifier);
 

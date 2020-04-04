@@ -14,7 +14,7 @@ enum TrackByBackboneSetup = "void track(BackboneContext context) { import glued.
 enum TrackByBackboneConsumer(string m, string n) = "context.track!(\""~m~"\", \""~n~"\")();";
 enum TrackByBackboneTeardown = "}";
     
-mixin scan!([at("ex1")], TrackByBackboneSetup, TrackByBackboneConsumer, TrackByBackboneTeardown);
+mixin unrollLoopThrough!([at("ex1")], TrackByBackboneSetup, TrackByBackboneConsumer, TrackByBackboneTeardown);
 
 unittest {
     //this tests scanning method in the same module as usage
@@ -26,6 +26,7 @@ unittest {
     template aggrPred(string m, string n) {
         alias aggrPred = (x) => x.moduleName == m && x.aggregate.identifier == n;
     }
+    writeln(ctx.tracked);
     
     assert(ctx.tracked.find!(aggrPred!("ex1.scan_aggregates", "X")));
     assert(ctx.tracked.find!(aggrPred!("ex1.scan_aggregates", "Y")));

@@ -10,7 +10,7 @@ import glued.testutils;
 
 import glued.testsuites.scan.common;
     
-mixin scan!([at("ex2.sub1"), at("ex2.sub2")], GatherPairsSetup!"gatherPairs", GatherPairsConsumer, GatherPairsTeardown);
+mixin unrollLoopThrough!([at("ex2.sub1"), at("ex2.sub2")], GatherPairsSetup!"gatherPairs", GatherPairsConsumer, GatherPairsTeardown);
 
 unittest {
     Pair[] found = gatherPairs();
