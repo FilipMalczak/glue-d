@@ -15,6 +15,11 @@ struct Stereotype {}
 @Implies!Tracked
 struct Component {}
 
+@Stereotype
+@Implies!Stereotype
+@Implies!Tracked
+struct Configuration {}
+
 //import poodinis.context: PoodinisComponent = Component;
 
 //template isStereotype(S) if (is(S == PoodinisComponent)) {

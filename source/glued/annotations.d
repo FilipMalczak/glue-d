@@ -5,7 +5,7 @@ import std.traits;
 import std.meta;
 
 //todo Ive prepared all that while Im not sure its useful...
-
+//its useful in context definition, maybe move to dedicated module?
 struct Target {
     enum Type {
         METHOD = 1<<0,

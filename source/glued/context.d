@@ -2,7 +2,7 @@ module glued.context;
 
 import std.variant;
 
-import poodinis;
+import poodinis: DependencyContainer;
 
 import glued.stereotypes;
 import glued.mirror;
@@ -54,10 +54,12 @@ class BackboneContext {
 }
 
 synchronized class GluedContext {
-    private shared(DependencyContainer) internalContext;
+    private shared(DependencyContainer) _internalContext;
+    
+    
     
     this(){
-        internalContext = new shared DependencyContainer();
+        _internalContext = new shared DependencyContainer();
     }
     
     void scan(alias scannables)(){
@@ -68,22 +70,36 @@ synchronized class GluedContext {
         doScan();
     }
     
+    @property
+    shared(DependencyContainer) internalContext(){
+        return _internalContext;
+    }
+    
     void track(string m, string n)(){
         version(glued_debug) {
             pragma(msg, "Tracking ", m, "::", n);
         }
         alias aggr = import_!(m, n);
         static if (qualifiesForTracking!(aggr)()){
+            alias target = TargetTypeOf!aggr;
+            enum isComponent = hasAnnotation!(aggr, Component);
             version(glued_debug) {
-                pragma(msg, "qualifies!");
+                import std.conv;
+                pragma(msg, "  which qualifies as ", (isComponent?"component":"configuration"), " of target ", to!string(target));
             }
-            static if (is(aggr == class)){
-                internalContext.register!aggr;
-            }
+            static if (isComponent && target == Target.Type.CLASS)
+                trackComponentClass!(aggr)();
         }
     }
     
+    private void trackComponentClass(X)() {
+        import std.stdio;
+        import std.traits;
+        writeln("registering ", fullyQualifiedName!X);
+        _internalContext.register!X;
+    }
+    
     private static bool qualifiesForTracking(alias T)(){
-        return isMarkedAsStereotype!(T, Tracked);
+        return hasAnnotation!(T, Component) || hasAnnotation!(T, Configuration);
     }
 }
