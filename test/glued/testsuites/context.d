@@ -1,5 +1,7 @@
 module glued.testsuites.context;
 
+import std.traits;
+
 import glued.context;
 import glued.scannable;
 
@@ -9,6 +11,6 @@ unittest {
     d.scan!([at("ex1")])();
     
     import ex1.scan_aggregates: Z;
-    Z inst = d.internalContext.resolve!Z;
+    Z inst = d.internalDiContext.resolve!Z;
     assert(inst !is null);
 }

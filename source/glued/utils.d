@@ -12,4 +12,4 @@ template ofType(T) {
     enum ofType(alias X) = (is(typeof(X) == T));
 }
 
-struct None{}
+enum None;

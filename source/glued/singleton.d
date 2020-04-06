@@ -1,6 +1,5 @@
 module glued.singleton;
 
-//todo is this a good idea?
 template Root(T) if (is(T == class)) {
     struct Root { 
         private static T instance;
@@ -25,6 +24,38 @@ template Root(T) if (is(T == class)) {
             {
                 Root.initialized  = true;
                 Root.instance = instance;
+            } else
+            //todo
+                throw new Exception("already initialized!");
+        }
+    }
+}
+
+//fixme this got ugly pretty fast :/
+template SharedRoot(T) if (is(T == class)) {
+    struct SharedRoot { 
+        private shared static T instance;
+        private shared static bool initialized = false;
+
+        private shared T _value;
+        
+        alias _value this;
+        
+        public static SharedRoot get(){
+            //todo if !initialized
+            return SharedRoot(instance);
+        }
+        
+        @property
+        public shared T value(){
+            return this._value;
+        }
+                
+        public static void initialize(shared T instance){
+            if (!initialized) 
+            {
+                SharedRoot.initialized  = true;
+                SharedRoot.instance = instance;
             } else
             //todo
                 throw new Exception("already initialized!");

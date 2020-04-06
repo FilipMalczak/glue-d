@@ -1,5 +1,5 @@
 /**
- * Extension and publis import of the lib.
+ * Extension and public import of the lib.
  */
 module glued.mirror;
 

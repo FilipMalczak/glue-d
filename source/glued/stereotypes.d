@@ -29,6 +29,10 @@ struct Configuration {}
 //    enum isStereotype = true;
 //}
 
+/**
+ * "is S marked as an annotation indicating something being of a stereotype?"
+ * true for things like Component, Controller, etc
+ */
 enum isStereotype(S) = (is(S == struct) && hasAnnotation!(S, Stereotype));
 enum isStereotype(alias S) = (is(typeof(S) == struct) && hasAnnotation!(typeof(S), Stereotype));
 
@@ -42,14 +46,15 @@ enum isStereotype(alias S) = (is(typeof(S) == struct) && hasAnnotation!(typeof(S
 alias getStereotypes(alias M) = Filter!(isStereotype, getAnnotations!M);
 
 template getStereotype(alias M, S) {
-    alias found = Filter!(ofType!S, getStereotypes!M);
-    static assert(found.length < 2);
-    static if (found.length) {
-        enum getStereotype = found[0];
-    } else {
-        enum getStereotype = None();
-    }
-    
+    pragma(msg, "getStereotypes!", M, " -> ", getStereotypes!M);
+    alias found = AliasSeq!(Filter!(ofType!S, getStereotypes!M));
+//    static assert(found.length == 1);
+    enum getStereotype = found;
 };
 
-enum isMarkedAsStereotype(alias M, S) = (getStereotype!(M, S) != None());
+/**
+ * "is M marked as being of stereotype S?"
+ * true for example for M=UserController and S=Controller
+ */ 
+enum isMarkedAsStereotype(alias M, S) = getStereotype!(M, S).length > 0;
+//enum isMarkedAsStereotype(alias M, S) = Filter!(ofType!S, getStereotypes!M).length > 0;

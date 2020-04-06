@@ -20,3 +20,14 @@ unittest {
     static assert(!isStereotype!SomeComponent);
     static assert(!isStereotype!ComplicatedComponent);
 }
+
+@Stereotype
+struct Controller {}
+
+@Controller
+class UserController {}
+
+unittest {
+    static assert(isStereotype!Controller);
+    static assert(isMarkedAsStereotype!(UserController, Controller));
+}

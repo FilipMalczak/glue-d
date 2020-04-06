@@ -145,4 +145,13 @@ template getAnnotations(alias M, T) {
     alias getAnnotations = Filter!(ofType!T, getAnnotations!M);
 }
 
+template getAnnotation(alias M, T) {
+    import glued.utils: ofType;
+    //todo return None instead? allow ommiting by version?
+    static assert(hasOneAnnotation!(M, T));
+    enum getAnnotation = getAnnotations!(M, T)[0];
+}
+
+enum hasOneAnnotation(alias M, T) = getAnnotations!(M, T).length == 1;
+
 enum hasAnnotation(alias M, T) = getAnnotations!(M, T).length > 0;
