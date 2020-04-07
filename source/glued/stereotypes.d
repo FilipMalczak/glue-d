@@ -1,5 +1,4 @@
 module glued.stereotypes;
-
 import std.meta;
 
 public import glued.annotations;
@@ -13,40 +12,39 @@ struct Stereotype {}
 @Stereotype
 @Implies!Stereotype
 @Implies!Tracked
-struct Component {}
+struct Register {} //todo -> Registered
 
 @Stereotype
 @Implies!Stereotype
 @Implies!Tracked
 struct Configuration {}
 
-//import poodinis.context: PoodinisComponent = Component;
+//import poodinis.context: PoodinisRegister = Register;
 
-//template isStereotype(S) if (is(S == PoodinisComponent)) {
+//template isStereotype(S) if (is(S == PoodinisRegister)) {
 //    enum isStereotype = true;
 //}
-//template isStereotype(alias S) if (is(typeof(S) == PoodinisComponent)) {
+//template isStereotype(alias S) if (is(typeof(S) == PoodinisRegister)) {
 //    enum isStereotype = true;
 //}
 
 /**
  * "is S marked as an annotation indicating something being of a stereotype?"
- * true for things like Component, Controller, etc
+ * true for things like Register, Controller, etc
  */
 enum isStereotype(S) = (is(S == struct) && hasAnnotation!(S, Stereotype));
 enum isStereotype(alias S) = (is(typeof(S) == struct) && hasAnnotation!(typeof(S), Stereotype));
 
-//template getAnnotations(T) if (is(T == PoodinisComponent)) {
+//template getAnnotations(T) if (is(T == PoodinisRegister)) {
 //    alias getAnnotations = AliasSeq!(Tracked());
 //}
-//template getAnnotations(alias T) if (is(T == PoodinisComponent)){
+//template getAnnotations(alias T) if (is(T == PoodinisRegister)){
 //    alias getAnnotations = AliasSeq!(Tracked());
 //}
 
 alias getStereotypes(alias M) = Filter!(isStereotype, getAnnotations!M);
 
 template getStereotype(alias M, S) {
-    pragma(msg, "getStereotypes!", M, " -> ", getStereotypes!M);
     alias found = AliasSeq!(Filter!(ofType!S, getStereotypes!M));
 //    static assert(found.length == 1);
     enum getStereotype = found;

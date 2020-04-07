@@ -4,21 +4,21 @@ import glued.stereotypes;
 
 struct NonStereotype {}
 
-@Component
-struct SpecializedComponent {}
+@Register
+struct SpecializedRegister {}
 
-@Component
-interface SomeComponent {}
+@Register
+interface SomeRegister {}
 
-@SpecializedComponent
-interface ComplicatedComponent {}
+@SpecializedRegister
+interface ComplicatedRegister {}
 
 unittest {
-    static assert(isStereotype!Component);
+    static assert(isStereotype!Register);
     static assert(!isStereotype!NonStereotype);
-    static assert(isStereotype!SpecializedComponent);
-    static assert(!isStereotype!SomeComponent);
-    static assert(!isStereotype!ComplicatedComponent);
+    static assert(isStereotype!SpecializedRegister);
+    static assert(!isStereotype!SomeRegister);
+    static assert(!isStereotype!ComplicatedRegister);
 }
 
 @Stereotype

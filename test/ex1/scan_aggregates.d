@@ -14,7 +14,7 @@ struct Ster {
 @Ster
 class Y {}
 
-@Ster @Component
+@Ster @Register
 class Z {}
 
 //fixme what the hell? if its here, its alright, if its in the other module, it fails oO
