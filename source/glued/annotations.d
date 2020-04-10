@@ -65,6 +65,7 @@ template TargetTypeOf(T...) if (T.length == 1) {
     }
 }
 
+//todo this can be easily replaced with inner aliases...
 //todo disable constructors
 struct Implies(S) if (is(S == struct)) { //todo if isAnnotation?
     const S implicated = S.init;
@@ -82,17 +83,45 @@ struct Implies(alias S) if (is(typeof(S) == struct)) { //todo ditto
     }
 }
 
+//todo wrong name
+enum onlyStructs(alias X) = is (typeof(X) == struct);
 
-enum onlyStructs(alias X) = is(X) ? is(X == struct) : is (typeof(X) == struct);
-
-enum expandToData(alias X) = is(X) ? X.init : X;
+template expandToData(alias X){
+    static if (__traits(isTemplate, X)){
+        static if (__traits(compiles, X!())) {
+            alias templateInstance = X!();
+        } else {
+            static if (__traits(compiles, X!(void))){
+                alias templateInstance = X!(void);
+            } else {
+                pragma(msg, "CANNOT EXPAND ", X, " WITH DEFAULTS, SKIPPING");
+                alias templateInstance = void;
+            }
+        }
+        static if (is(templateInstance == void)){
+            enum expandToData;
+        } else {
+            enum expandToData = expandToData!(templateInstance);
+        }
+    } else {
+            static if (is(X)){
+            static if (is(X == struct)) {
+                enum expandToData = X.init;
+            } else {
+                enum expandToData;
+            }
+        } else {
+            enum expandToData = X;
+        }
+    }
+}
 
 template getType(alias X) if (!is(X)) {
     alias getType = typeof(X);
 }
 
 template getExplicitAnnotations(alias M) {
-    alias getExplicitAnnotations = staticMap!(expandToData, Filter!(onlyStructs, __traits(getAttributes, M)));
+    alias getExplicitAnnotations = Filter!(onlyStructs, staticMap!(expandToData, __traits(getAttributes, M)));
 }
 
 template getExplicitAnnotationTypes(alias M) {
@@ -138,20 +167,24 @@ template getImplicitAnnotations(alias M) {
     alias getImplicitAnnotations = staticMap!(extractImplicit, toTypes!(getExplicitAnnotations!M));
 }
 
-alias getAnnotations(alias M) = NoDuplicates!(AliasSeq!(getExplicitAnnotations!M, getImplicitAnnotations!M));
+alias getAnnotations(alias M) = AliasSeq!(NoDuplicates!(AliasSeq!(getExplicitAnnotations!M, getImplicitAnnotations!M)));
 
-template getAnnotations(alias M, T) {
+template getAnnotations(alias M, alias T) {
     import glued.utils: ofType;
-    alias getAnnotations = Filter!(ofType!T, getAnnotations!M);
+    //static if (fullyQualifiedName!M == "glued.testsuites.annotations.WithGeneric")
+    alias pred = ofType!T;
+//    pragma(msg, __LINE__, " M ", M, " T ", fullyQualifiedName!T, " ", getAnnotations!M, "Y", pred!(getAnnotations!(M)[0]));
+    alias getAnnotations = Filter!(pred, AliasSeq!(getAnnotations!M));
 }
 
-template getAnnotation(alias M, T) {
+template getAnnotation(alias M, alias T) {
     import glued.utils: ofType;
     //todo return None instead? allow ommiting by version?
     static assert(hasOneAnnotation!(M, T));
+//    pragma(msg,  __LINE__, " M ", M, " T ", fullyQualifiedName!T, " ", getAnnotations!(M, T), "XXX", hasOneAnnotation!(M, T));
     enum getAnnotation = getAnnotations!(M, T)[0];
 }
 
-enum hasOneAnnotation(alias M, T) = getAnnotations!(M, T).length == 1;
+enum hasOneAnnotation(alias M, alias T) = getAnnotations!(M, T).length == 1;
 
-enum hasAnnotation(alias M, T) = getAnnotations!(M, T).length > 0;
+enum hasAnnotation(alias M, alias T) = getAnnotations!(M, T).length > 0;

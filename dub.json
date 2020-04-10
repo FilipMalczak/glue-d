@@ -9,8 +9,11 @@
 				"test"
 			],
 			"targetType": "executable",
-			"_versions": [
-				"glued_debug"
+			"versions": [
+				"dejector_trace",
+				"debug_glued_scan",
+				"debug_glued_context",
+				"debug_glued_context_runtime"
 			]
 		},
 		{
@@ -28,11 +31,10 @@
 	"copyright": "Copyright © 2019, Filip Malczak",
 	"dependencies": {
 		"mirror": "~>0.1.9",
-		"poodinis": "~>8.0.3",
-		"poodinis-proper-d-injector": "~>0.1.0",
+		"glue-dejector": ">=0.2.0",
 		"unit-threaded": "~>0.10.8"
 	},
-	"description": "autoscanning + vibe.d + poodinis + mirror",
+	"description": "autoscanning + DI (with dejector fork) + ...",
 	"license": "Apache 2.0",
 	"name": "glue-d",
 	"subPackages": [

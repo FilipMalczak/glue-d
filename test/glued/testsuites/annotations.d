@@ -91,3 +91,17 @@ unittest {
     static assert(getAnnotations!(T3) == AliasSeq!(S3(), S(2)));
     static assert(getAnnotations!(T4) == AliasSeq!(S4(), S2(), S()));
 }
+
+struct Generic(T) {
+    alias Type = T;
+}
+
+@(Generic!(S1))
+struct WithGeneric {}
+
+unittest {
+    static assert(getAnnotations!(WithGeneric) == AliasSeq!(Generic!S1()));
+    static assert(getAnnotation!(WithGeneric, Generic!S1) == Generic!S1());
+    static assert(getAnnotation!(WithGeneric, Generic) == Generic!S1());
+    static assert(is(getAnnotation!(WithGeneric, Generic).Type == S1));
+}

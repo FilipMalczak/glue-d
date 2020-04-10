@@ -27,7 +27,7 @@ docs/
 
 #_index.d generated files
 
-**/_index.d
+**/*_index.d
 
 dub.selections.json
 

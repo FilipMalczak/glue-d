@@ -81,7 +81,7 @@ Scannable[] listScannables(Scannable[] s){
 
 //not the nicest way, but it makes non-debug code nicer
 //IMPORTANT modify both branches if you do anything here!
-version(glued_debug) {
+version(debug_glued_scan) {
     mixin template unrollLoopThrough(alias roots, string setup, alias consumer, string teardown, string f=__FILE__, int l=__LINE__){
         pragma(msg, "MIXING IN @",f, ":", l);
         pragma(msg, prepareScan!(listScannables(roots), setup, consumer, teardown)());
