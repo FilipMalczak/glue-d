@@ -5,9 +5,10 @@ import std.traits;
 
 import glued.context;
 import glued.scannable;
+import glued.logging;
 
 unittest {
-    auto d = new DefaultGluedContext;
+    auto d = new DefaultGluedContext(new StdoutSink);
     
     d.scan!([at("ex1")])();
     
@@ -18,7 +19,7 @@ unittest {
 }
 
 unittest {
-    auto d = new DefaultGluedContext;
+    auto d = new DefaultGluedContext(new StdoutSink);
     d.scan!([at("foo")])();
     writeln("scan finished");
     import foo.api;
@@ -38,7 +39,7 @@ unittest {
 
 unittest {
     import std.stdio;
-    auto d = new DefaultGluedContext;
+    auto d = new DefaultGluedContext(new StdoutSink);
     d.scan!([at("foo")])();
     writeln("scan finished");
     import foo.api;

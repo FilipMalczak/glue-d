@@ -12,6 +12,7 @@ import glued.singleton;
 import glued.mirror;
 import glued.scan;
 import glued.utils;
+import glued.logging;
 
 import dejector;
 
@@ -90,57 +91,38 @@ auto resolveCall(R, P...)(Dejector injector, R function(P) toCall){
 }
 
 auto resolveCall(R, P...)(Dejector injector, R delegate(P) toCall){
+    mixin CreateLogger;
+
     mixin(generateImports!(P)());
     static if (is(ReturnType!foo == void)){
-        version(debug_glued_context) {
-            pragma(msg, "@", __FILE__, ":", __LINE__, "mixing in:");
-            pragma(msg, generateResolvedExpression!(P)()~";");
-        }
-        mixin(generateResolvedExpression!(P)()~";");
+        mixin(Logger.logged!(generateResolvedExpression!(P)()~";"));
     } else {
-        version(debug_glued_context) {
-            pragma(msg, "@", __FILE__, ":", __LINE__, "mixing in:");
-            pragma(msg, "return "~generateResolvedExpression!(P)()~";");
-        }
-        mixin("return "~generateResolvedExpression!(P)()~";");
-    }
-}
-
-//template resolveCall(alias injector, alias foo){
-//    alias params = Parameters!foo;
-//    //todo extension point when we introduce environment (key/val config)
-//    alias resolved = staticMap!(injector.get, params);
-//    enum resolveCall = foo(resolved);
-//}
-
-void log(string f=__FILE__, int l=__LINE__, T...)(T args){
-    version(debug_glued_context_runtime){
-        import std.stdio;
-        import std.range;
-        import std.conv;
-        writeln("@", f, ":", l, " | ", args);
+        mixin(Logger.logged.value!("return "~generateResolvedExpression!(P)()~";"));
     }
 }
 
 struct GluedCoreProcessor {
-    static void before(){}
+    mixin CreateLogger;
+    Logger log;
+
+    void before(){}
     
     static bool canHandle(A)(){
         return is(A == class) && (isMarkedAsStereotype!(A, Component) || isMarkedAsStereotype!(A, Configuration) );
     }
     
-    static void handle(A)(GluedInternals internals){
+    void handle(A)(GluedInternals internals){
         static if (isMarkedAsStereotype!(A, Component)) {
             import std.stdio;
             import std.traits;
-            log("Binding ", fullyQualifiedName!A);
+            log.info.emit("Binding ", fullyQualifiedName!A);
             internals.injector.bind!(A)(new ComponentClassProvider!A(internals.injector));
-            log("Bound ", fullyQualifiedName!A, " based on its class definition");
+            log.info.emit("Bound ", fullyQualifiedName!A, " based on its class definition");
         }
         static if (isMarkedAsStereotype!(A, Configuration)){
             import std.stdio;
             import std.traits;
-            log("Binding based on configuration ", fullyQualifiedName!A);
+            log.info.emit("Binding based on configuration ", fullyQualifiedName!A);
             internals.injector.bind!(A, Singleton)(new ComponentClassProvider!A(internals.injector));
             A a;
             static foreach (name; __traits(allMembers, A)){
@@ -150,26 +132,26 @@ struct GluedCoreProcessor {
                             static if (hasAnnotation!(overload, Component)) {
                                 static if (!hasAnnotation!(overload, IgnoreResultBinding)){
                                     //todo reuse the same provider for many bindings
-                                    log("Binding type "~fullyQualifiedName!(ReturnType!overload)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
+                                    log.info.emit("Binding type "~fullyQualifiedName!(ReturnType!overload)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
                                     internals.injector.bind!(ReturnType!overload)(new ConfigurationMethodProvider!(A, name, i)(internals.injector));
-                                    log("Bound "~fullyQualifiedName!(ReturnType!overload)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
+                                    log.info.emit("Bound "~fullyQualifiedName!(ReturnType!overload)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
                                 } //todo else assert exactly one ignore and any Bind
                                 
                                 static foreach (bind; getAnnotations!(overload, Bind)){
-                                    log("Binding type "~fullyQualifiedName!(Bind.As)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
+                                    log.info.emit("Binding type "~fullyQualifiedName!(Bind.As)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
                                     internals.injector.bind!(Bind.As)(new ConfigurationMethodProvider!(A, name, i)(internals.injector));
-                                    log("Bound "~fullyQualifiedName!(Bind.As)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
+                                    log.info.emit("Bound "~fullyQualifiedName!(Bind.As)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
                                 }
                             }
                         }
                 }
             }
-            log("Bound chosen members on configuration ", fullyQualifiedName!A);
+            log.info.emit("Bound chosen members on configuration ", fullyQualifiedName!A);
         }
     }
 
     
-    static void after(){}
+    void after(){}
 }
 
 //todo good start, but lets keep it simple
@@ -211,21 +193,24 @@ template queryForField(T, string name){
 }
 
 class InstanceInitializer(T, bool checkNulls): Initializer {
+    mixin CreateLogger;
     private Dejector injector;
+    private Logger log;
     
     this(Dejector injector){
         this.injector = injector;
+        log = Logger(injector.get!(LogSink));
     }
 
     override void initialize(Object o){
-        traceWiring("Instance initialization for ", &o, " of type ", fullyQualifiedName!T);
+        log.debug_.emit("Instance initialization for ", &o, " of type ", fullyQualifiedName!T);
         T t = (cast(T)o);
-        traceWiring("Field injection for ", &o, " of type ", fullyQualifiedName!T);
+        log.debug_.emit("Field injection for ", &o, " of type ", fullyQualifiedName!T);
         fieldInjection(t);
 //        //split to field components/values injection
 //        methodInjection(t);
 //        postConstructInjection(t);
-        traceWiring("Instance initialization for ", &o, " of type ", fullyQualifiedName!T, " finished");
+        log.debug_.emit("Instance initialization for ", &o, " of type ", fullyQualifiedName!T, " finished");
     }
     
     private void fieldInjection(T t){
@@ -234,16 +219,16 @@ class InstanceInitializer(T, bool checkNulls): Initializer {
                 mixin("import "~moduleName!(queryForField!(T, name))~";");
                 static if (checkNulls) {
                     if (__traits(getMember, t, name) is null) {
-                        traceWiring("Injecting ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " after null check");
+                        log.debug_.emit("Injecting ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " after null check");
                         __traits(getMember, t, name) = this.injector.get!(queryForField!(T, name));
-                        traceWiring("Injected ", name, " after null check");
+                        log.debug_.emit("Injected ", name, " after null check");
                     } else {
-                        traceWiring(name, " didn't pass null check (value=", __traits(getMember, t, name), ")");
+                        log.debug_.emit(name, " didn't pass null check (value=", __traits(getMember, t, name), ")");
                     }
                 } else {
-                    traceWiring("Injecting ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " with no null check");
+                    log.debug_.emit("Injecting ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " with no null check");
                     __traits(getMember, t, name) = this.injector.get!(queryForField!(T, name));
-                    traceWiring("Injected ", name, " with no null check");
+                    log.debug_.emit("Injected ", name, " with no null check");
                 }
             } // else assert has no Autowire annotations
         }
@@ -251,19 +236,23 @@ class InstanceInitializer(T, bool checkNulls): Initializer {
 }
 
 class ComponentSeedInitializer(T): InstanceInitializer!(T, false) {
+    mixin CreateLogger;
     private Dejector injector;
+    private Logger log;
+    
     this(Dejector injector){
         super(injector);
         this.injector = injector;
+        log = Logger(injector.get!(LogSink));
     }
 
     override void initialize(Object o){
-        traceWiring("Seed initialization for ", &o, " of type ", fullyQualifiedName!T);
+        log.debug_.emit("Seed initialization for ", &o, " of type ", fullyQualifiedName!T);
         T t = (cast(T)o);
-        traceWiring("Constructor injection for ", &o, " of type ", fullyQualifiedName!T);
+        log.debug_.emit("Constructor injection for ", &o, " of type ", fullyQualifiedName!T);
         constructorInjection(t);
         super.initialize(o);
-        traceWiring("Seed initialization for ", &o, " of type ", fullyQualifiedName!T, " finished");
+        log.debug_.emit("Seed initialization for ", &o, " of type ", fullyQualifiedName!T, " finished");
     }
     
     private void constructorInjection(T t){
@@ -273,10 +262,10 @@ class ComponentSeedInitializer(T): InstanceInitializer!(T, false) {
                 static if (__traits(getProtection, ctor) == "public" && hasOneAnnotation!(ctor, Constructor)){
                     //todo when only one constructor - default
                     assert(!ctorCalled); //todo static?
-                    traceWiring("Calling constructor for seed ", &t, " of type ", fullyQualifiedName!T);
+                    log.debug_.emit("Calling constructor for seed ", &t, " of type ", fullyQualifiedName!T);
                     resolveCall(this.injector, __traits(getOverloads, t, "__ctor")[i]);
                     //mixin(callCtor!(Parameters!(ctor)());
-                    traceWiring("Called constructor for instance", &t);
+                    log.debug_.emit("Called constructor for instance", &t);
                     //todo maybe we can allow for many constructors?
                     ctorCalled = true;
                 } // else assert not hasAnnotations 
@@ -287,30 +276,38 @@ class ComponentSeedInitializer(T): InstanceInitializer!(T, false) {
 
 //todo is(class)
 class ComponentClassProvider(T): Provider {
+    mixin CreateLogger;
     private Dejector injector;
+    private Logger log;
+    
     this(Dejector injector){
         this.injector = injector;
+        log = Logger(injector.get!(LogSink));
     }
     
     override Initialization get(){
-        traceWiring("Building seed of type ", fullyQualifiedName!T);
+        log.debug_.emit("Building seed of type ", fullyQualifiedName!T);
         auto seed = cast(T) _d_newclass(T.classinfo);
-        traceWiring("Built seed ", &seed, " of type ", fullyQualifiedName!T);
+        log.debug_.emit("Built seed ", &seed, " of type ", fullyQualifiedName!T);
         return new Initialization(seed, false, new ComponentSeedInitializer!T(injector));
     }
 }
 
 class ConfigurationMethodProvider(C, string name, size_t i): Provider {
+    mixin CreateLogger;
     private Dejector injector;
+    private Logger log;
+    
     this(Dejector injector){
         this.injector = injector;
+        log = Logger(injector.get!(LogSink));
     }
     
     override Initialization get(){
-        traceWiring("Resolving configuration class instance ", fullyQualifiedName!C);
+        log.debug_.emit("Resolving configuration class instance ", fullyQualifiedName!C);
         C config = injector.get!C;
-        traceWiring("Resolved configuration class ", fullyQualifiedName!C, " instance ", &config);
-        traceWiring("Building configuration method ", fullyQualifiedName!C, ".", name);
+        log.debug_.emit("Resolved configuration class ", fullyQualifiedName!C, " instance ", &config);
+        log.debug_.emit("Building configuration method ", fullyQualifiedName!C, ".", name);
 //        ReturnType!(__traits(getOverloads, config, name)[i]) foo(){
 //            template step(int i, acc...){
 //                static if (acc.length == Parameters!(__traits(getOverloads, config, name)[i]).length){
@@ -323,7 +320,7 @@ class ConfigurationMethodProvider(C, string name, size_t i): Provider {
 //        }
         auto instance = resolveCall(injector, &(__traits(getOverloads, config, name)[i]));
         enum isSeed = hasOneAnnotation!(__traits(getOverloads, C, name)[i], Seed); //todo assert not has many
-        traceWiring("Built initialized instance ", &instance, " method ", fullyQualifiedName!C, ".", name);
+        log.debug_.emit("Built initialized instance ", &instance, " method ", fullyQualifiedName!C, ".", name);
         auto initializer = isSeed ? new InstanceInitializer!(C, true)(injector) : new NullInitializer;
         return new Initialization(cast(Object) instance, !isSeed, cast(Initializer) initializer);
     }
@@ -334,23 +331,29 @@ struct GluedInternals {
 }
 
 class GluedContext(Processors...) {
+    private LogSink logSink;
     private GluedInternals internals;
+    mixin CreateLogger;
+    private Logger log;
     
     alias processors = AliasSeq!(Processors);
     
-    this(){
+    this(LogSink logSink){
+        this.logSink = logSink;
+        this.log = Logger(logSink);
         internals = GluedInternals(new Dejector());
         internals.injector.bind!(Dejector)(new InstanceProvider(internals.injector));
+        internals.injector.bind!(LogSink)(new InstanceProvider(cast(Object) logSink));
     }
     
     private void before(){
-        static foreach (p; processors)
-            p.before();
+        static foreach (P; processors)
+            P(P.Logger(logSink)).before();
     }
     
     private void after(){
-        static foreach (p; processors)
-            p.after();
+        static foreach (P; processors)
+            P(P.Logger(logSink)).after();
     }
     
     void scan(alias scannables)(){
@@ -368,20 +371,14 @@ class GluedContext(Processors...) {
     }
     
     void track(string m, string n)(){
-        version(debug_glued_context) {
-            pragma(msg, "Tracking ", m, "::", n, " by ", typeof(this));
-        }
+        log.Info.Emit!("Tracking ", m, "::", n);
         alias aggr = import_!(m, n);
         static if (qualifiesForTracking!(aggr)()){
-            version(debug_glued_context) {
-                pragma(msg, m, "::", n, " qualified for tracking by ", typeof(this));
-            }
-            static foreach (p; processors){
-                static if (p.canHandle!(aggr)()){
-                    version(debug_glued_context) {
-                        pragma(msg, "Processor", p, " can handle ", m, "::", n, " when used with ", typeof(this));
-                    }
-                    p.handle!(aggr)(internals);
+            log.Info.Emit!(m, "::", n, " qualified for tracking by ", typeof(this));
+            static foreach (P; processors){
+                static if (P.canHandle!(aggr)()){
+                    log.Info.Emit!("Processor", P, " can handle ", m, "::", n, " when used with ", typeof(this));
+                    P(P.Logger(logSink)).handle!(aggr)(internals);
                 }
             }
         }

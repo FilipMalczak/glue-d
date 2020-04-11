@@ -8,7 +8,12 @@
 			"sourcePaths": [
 				"test"
 			],
-			"targetType": "executable"
+			"targetType": "executable",
+			"versions": [
+				"debug_glued_scan",
+				"debug_glued_context",
+				"debug_glued_context_runtime"
+			]
 		},
 		{
 			"dependencies": {
