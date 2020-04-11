@@ -30,7 +30,6 @@ enum isStereotype(alias S) = (is(typeof(S) == struct) && hasAnnotation!(typeof(S
 alias getStereotypes(alias M) = Filter!(isStereotype, getAnnotations!M);
 
 template getStereotype(alias M, S) {
-    pragma(msg, "getStereotypes!", M, " -> ", getStereotypes!M);
     alias found = AliasSeq!(Filter!(ofType!S, getStereotypes!M));
 //    static assert(found.length == 1); //todo getStereotypes(M, S) and enable this check? or < 2
     enum getStereotype = found;

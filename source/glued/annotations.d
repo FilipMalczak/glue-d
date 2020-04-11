@@ -155,6 +155,7 @@ template getImplicitAnnotations(alias M) {
                     alias step = step!(i+1, AliasSeq!(extractImplicit!(typeof(locallyImplicated[i])), Acc));
                 }
             }
+            //todo what a clustertruck
             alias theirImplications = step!(0);//staticMap!(extractImplicit, toTypes!theirImplications);//probably extract from all UDAs instead
             alias extractImplicit = AliasSeq!(locallyImplicated, theirImplications);
         }
@@ -171,9 +172,7 @@ alias getAnnotations(alias M) = AliasSeq!(NoDuplicates!(AliasSeq!(getExplicitAnn
 
 template getAnnotations(alias M, alias T) {
     import glued.utils: ofType;
-    //static if (fullyQualifiedName!M == "glued.testsuites.annotations.WithGeneric")
     alias pred = ofType!T;
-//    pragma(msg, __LINE__, " M ", M, " T ", fullyQualifiedName!T, " ", getAnnotations!M, "Y", pred!(getAnnotations!(M)[0]));
     alias getAnnotations = Filter!(pred, AliasSeq!(getAnnotations!M));
 }
 
@@ -181,7 +180,6 @@ template getAnnotation(alias M, alias T) {
     import glued.utils: ofType;
     //todo return None instead? allow ommiting by version?
     static assert(hasOneAnnotation!(M, T));
-//    pragma(msg,  __LINE__, " M ", M, " T ", fullyQualifiedName!T, " ", getAnnotations!(M, T), "XXX", hasOneAnnotation!(M, T));
     enum getAnnotation = getAnnotations!(M, T)[0];
 }
 

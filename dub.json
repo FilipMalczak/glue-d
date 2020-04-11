@@ -8,13 +8,7 @@
 			"sourcePaths": [
 				"test"
 			],
-			"targetType": "executable",
-			"versions": [
-				"dejector_trace",
-				"debug_glued_scan",
-				"debug_glued_context",
-				"debug_glued_context_runtime"
-			]
+			"targetType": "executable"
 		},
 		{
 			"dependencies": {
@@ -30,8 +24,9 @@
 	],
 	"copyright": "Copyright © 2019, Filip Malczak",
 	"dependencies": {
-		"mirror": "~>0.1.9",
 		"glue-dejector": ">=0.2.0",
+		"mirror": "~>0.1.9",
+		"optional": "~>1.0.0",
 		"unit-threaded": "~>0.10.8"
 	},
 	"description": "autoscanning + DI (with dejector fork) + ...",

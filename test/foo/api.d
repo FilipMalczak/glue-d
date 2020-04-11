@@ -30,11 +30,5 @@ class Api {
             ),
             3
         );
-    } 
-    
-    unittest {
-        pragma(msg, "X", getAnnotations!(__traits(getMember, Api, "power")));
-        pragma(msg, "X", getAnnotations!(__traits(getMember, Api, "multiply")));
-        pragma(msg, "X", getAnnotations!(__traits(getMember, Api, "add")));
     }
 }

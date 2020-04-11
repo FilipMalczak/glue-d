@@ -144,14 +144,10 @@ struct GluedCoreProcessor {
             internals.injector.bind!(A, Singleton)(new ComponentClassProvider!A(internals.injector));
             A a;
             static foreach (name; __traits(allMembers, A)){
-                pragma(msg, "A ", A, " -> ", name, " ", __traits(getProtection, __traits(getMember, A, name)));
                 static if (__traits(getProtection, __traits(getMember, A, name)) == "public" &&
                     isFunction!(__traits(getMember, A, name))) {
-                        pragma(msg, "A ", A, " -> ", name, "YEP");
                         static foreach (i, overload; __traits(getOverloads, A, name)) {
-                            pragma(msg, "i", i);
                             static if (hasAnnotation!(overload, Component)) {
-                                pragma(msg, "component!");
                                 static if (!hasAnnotation!(overload, IgnoreResultBinding)){
                                     //todo reuse the same provider for many bindings
                                     log("Binding type "~fullyQualifiedName!(ReturnType!overload)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
@@ -234,9 +230,6 @@ class InstanceInitializer(T, bool checkNulls): Initializer {
     
     private void fieldInjection(T t){
         static foreach (i, name; FieldNameTuple!T){
-            pragma(msg, "NAME ", name);
-            pragma(msg, "PROTECTION ", __traits(getProtection, __traits(getMember, T, name)));
-            pragma(msg, "ANNOTATIONS ", getAnnotations!(__traits(getMember, T, name), Autowire));
             static if (__traits(getProtection, __traits(getMember, T, name)) == "public" && hasOneAnnotation!(__traits(getMember, T, name), Autowire)){
                 mixin("import "~moduleName!(queryForField!(T, name))~";");
                 static if (checkNulls) {
