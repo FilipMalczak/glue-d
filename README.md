@@ -1,8 +1,8 @@
 # glue-d
 
-> master: [![master status](https://img.shields.io/travis/FilipMalczak/glue-d?label=master)](https://travis-ci.org/FilipMalczak/glue-d/branches)
+> master: [![master status](https://img.shields.io/travis/FilipMalczak/glue-d/master?label=master)](https://travis-ci.org/FilipMalczak/glue-d/branches)
 >
-> dev: [![dev status](https://travis-ci.org/FilipMalczak/glue-d.svg?branch=dev)](https://travis-ci.org/FilipMalczak/glue-d/branches)
+> dev: [![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?label=dev))](https://travis-ci.org/FilipMalczak/glue-d/branches)
 
 Bunch of different D-lang tools glued together with some sprinkles on top.
 
