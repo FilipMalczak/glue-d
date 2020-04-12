@@ -57,7 +57,7 @@ string format(LogEvent e){
     //todo enforce filename length in similar fashion; probably wrap these functions into struct that takes separator as field
     string filename = e.eventLocation.filename;
     string tid;
-    return to!string(e.eventLocation.line)~" :: "~filename.leftJustify(30)~" @ "~
+    return to!string(e.eventLocation.line).leftJustify(4)~" :: "~filename.leftJustify(40)~" @ "~
     ( e.timestamp.empty ? 
         "N/A (compile-time)".center(25, ' ') : 
         e.timestamp.front().to!string.cutDown(25).leftJustify(25, ' ')
@@ -385,7 +385,7 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
         import std.concurrency: thisTid, Tid;
         import optional: Optional, no, some;
         
-        private LogSink logSink;
+        LogSink logSink;
         
         this(LogSink logSink){
             this.logSink = logSink;
@@ -407,8 +407,9 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
         
         static LogEvent event(Level level, string message, CodeLocation eventLocation, bool figureOutEventAggregate=true){
             if (figureOutEventAggregate) {
+                
                 if (location.moduleName == eventLocation.moduleName && 
-                    location.aggregateName && eventLocation.functionName && 
+                    location.aggregateName.length > 0 && eventLocation.functionName.length > 0 && 
                     eventLocation.functionName.startsWith(location.aggregateName)){
                         eventLocation.aggregateName = eventLocation.functionName.split(".")[0..$-1].join(".");
                 }
@@ -519,7 +520,19 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
             string[] lines = s.splitLines();
             string result; 
             foreach (i, line; lines){
-                result ~= to!string(l+i).leftJustify(4, ' ')~"|"~line~"\n"; //padding
+                result ~= to!string(l+i).leftJustify(4, ' ')~" |"~line~"\n"; //padding
+            }
+            return result;
+        }
+        
+        static string indentLines(string s, string onLeft="\t"){
+            import std.string: splitLines, leftJustify;
+            import std.conv: to;
+            
+            string[] lines = s.splitLines();
+            string result; 
+            foreach (i, line; lines){
+                result ~= onLeft~line~"\n";
             }
             return result;
         }
@@ -527,7 +540,7 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
         struct LoggedClosure(string f=__FILE__, int l=__LINE__, string m=__MODULE__, string foo=__FUNCTION__,  string prettyFoo=__PRETTY_FUNCTION__) {
             //todo prefix/suffix should be customizable when obtaining this closure
             string value(string s)(){
-                Info!(f, l).Emit!("mixing in:\n"~numberLines(s, l)~"--- END OF MIXIN ---")();
+                Dev!(f, l, m, foo, prettyFoo).Emit!("mixing in:\n"~indentLines(numberLines(s, l))~"--- END OF MIXIN ---")();
                 return s;
             }
         }
@@ -551,7 +564,7 @@ version(unittest){
 
         static auto log = Logger(new StdoutSink);
         
-        mixin(Logger.logged.value!("pragma(msg, \"yellow\");"));
+        mixin(Logger.logged.value!("enum CInnerEnum;"));
         
         static void foo(string bastard="you"){
             mixin CreateLogger!();
