@@ -9,7 +9,7 @@ struct St {}
 enum E;   
 
 unittest {
-    with (Target.Type) {
+    with (TargetType) {
         static assert(TargetTypeOf!I == INTERFACE);
         static assert(TargetTypeOf!C == CLASS);
         static assert(TargetTypeOf!St == STRUCT);
@@ -49,7 +49,7 @@ unittest {
     static assert(getExplicitAnnotations!A3 == AliasSeq!(X(), Y(), Z()));
 }
 
-@Target(Target.Type.STRUCT)
+@Target(TargetType.STRUCT)
 struct S {
     int x = 1;
 }
@@ -57,15 +57,15 @@ struct S {
 @S
 struct S1 {}
 
-@Target(Target.Type.STRUCT)
+@Target(TargetType.STRUCT)
 @Implies!(S)
 struct S2 {}
 
-@Target(Target.Type.STRUCT)
+@Target(TargetType.STRUCT)
 @Implies!(S(2))
 struct S3 {}
 
-@Target(Target.Type.STRUCT)
+@Target(TargetType.STRUCT)
 @Implies!(S2)
 struct S4 {}
 

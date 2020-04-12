@@ -4,34 +4,33 @@ import std.conv;
 import std.traits;
 import std.meta;
 
-//todo Ive prepared all that while Im not sure its useful...
-//its useful in context definition, maybe move to dedicated module?
-struct Target {
-    enum Type {
-        METHOD = 1<<0,
-        FIELD = 1<<1,
-        INTERFACE = 1<<2,
-        CLASS = 1<<3,
-        STRUCT = 1<<4,
-        ENUM = 1<<5,
-        //todo annotation?
-        
-        MEMBER = (METHOD | FIELD),
-        
-        DATA = (STRUCT | ENUM),
-        POINTER = (INTERFACE | CLASS),
-        TYPE = (DATA | POINTER),
-        
-        ANY = (MEMBER | TYPE)
-    }
+enum TargetType {
+    MODULE = 0, //non-target 
+    FUNCTION = 1<<0,
+    VARIABLE = 1<<1,
+    INTERFACE = 1<<2,
+    CLASS = 1<<3,
+    STRUCT = 1<<4,
+    ENUM = 1<<5,
+    //todo annotation?
+    
+    CODE = (FUNCTION | VARIABLE),
+    
+    DATA = (STRUCT | ENUM),
+    POINTER = (INTERFACE | CLASS),
+    TYPE = (DATA | POINTER),
+    
+    ANY = (CODE | TYPE)
+}
 
-    Type[] types;
+mixin template TargetTypeAnnotationBody() {
+    TargetType[] types;
     int mask;
     
-    this(Type[] types...){
+    this(TargetType[] types...){
         assert(types.length); //todo
         this.types = types;
-        foreach (Type type; types)
+        foreach (TargetType type; types)
             mask = mask | type;
     }
     
@@ -39,28 +38,62 @@ struct Target {
      * @param checked - type of element that annotation (annotated with this Target) was put on
      * @return - if the annotation annotated with Target can be put on checked type of element
      */
-    bool canAnnotate(Type checked){
+    bool canAnnotate(TargetType checked){
         return (mask & to!int(checked)) > 0;
     }
 }
 
+
+/**
+ * This is core facility of annotation validation, so it won't be checked itself,
+ * and won't have any annotations. If it would be annotated, UDAs would look like
+ *     @OnAnnotation()
+ * 
+ * @param Checker - template that evaluates to enum of type bool; it should take
+ *                  single parameter, which would be annotated target. Result of
+ *                  its evaluation will be subject to static assertion when 
+ *                  retrieving parameters annotations, so don't use this module
+ */
+struct CheckedBy(Checker){
+    alias Check = Checker;
+}
+
+@OnAnnotation
+struct Target {
+    mixin TargetTypeAnnotationBody;
+}
+
+@OnAnnotation
+struct TargetOwner {
+    mixin TargetTypeAnnotationBody;
+}
+
+@Target(TargetType.CODE)
+@TargetOwner(TargetType.TYPE)
+struct OnStatic {}
+
+@Target(TargetType.STRUCT)
+struct OnAnnotation {}
+alias Metaannotation = OnAnnotation;
+
 template TargetTypeOf(T...) if (T.length == 1) {
     static if (is(T[0])) {
         static if (is(T[0] == class)){
-            enum TargetTypeOf = Target.Type.CLASS;
+            enum TargetTypeOf = TargetType.CLASS;
         } 
         else
         static if (is(T[0] == interface)){
-            enum TargetTypeOf = Target.Type.INTERFACE;
+            enum TargetTypeOf = TargetType.INTERFACE;
         }
         else
         static if (is(T[0] == struct)){
-            enum TargetTypeOf = Target.Type.STRUCT;
+            enum TargetTypeOf = TargetType.STRUCT;
         }
         static if (is(T[0] == enum)){
-            enum TargetTypeOf = Target.Type.ENUM;
+            enum TargetTypeOf = TargetType.ENUM;
         }
     } else {
+        
         static assert(false, "support for methods and fields is coming");
     }
 }
@@ -168,12 +201,21 @@ template getImplicitAnnotations(alias M) {
     alias getImplicitAnnotations = staticMap!(extractImplicit, toTypes!(getExplicitAnnotations!M));
 }
 
-alias getAnnotations(alias M) = AliasSeq!(NoDuplicates!(AliasSeq!(getExplicitAnnotations!M, getImplicitAnnotations!M)));
+alias getUncheckedAnnotations(alias M) = AliasSeq!(NoDuplicates!(AliasSeq!(getExplicitAnnotations!M, getImplicitAnnotations!M)));
+
+template performCheck(alias M){
+    template on(alias A){
+        //asserts
+        alias on = A;
+    }
+}
+
+alias getAnnotations(alias M) = AliasSeq!(staticMap!(performCheck!M.on, getUncheckedAnnotations!M));
 
 template getAnnotations(alias M, alias T) {
     import glued.utils: ofType;
     alias pred = ofType!T;
-    alias getAnnotations = Filter!(pred, AliasSeq!(getAnnotations!M));
+    alias getAnnotations = Filter!(pred, getAnnotations!M);
 }
 
 template getAnnotation(alias M, alias T) {
