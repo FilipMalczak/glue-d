@@ -105,3 +105,17 @@ unittest {
     static assert(getAnnotation!(WithGeneric, Generic) == Generic!S1());
     static assert(is(getAnnotation!(WithGeneric, Generic).Type == S1));
 }
+
+@Target(TargetType.CLASS)
+struct AnnForClasses {}
+
+@AnnForClasses
+class ClassWithAnn {}
+
+@AnnForClasses
+struct ShouldFail {}
+
+unittest {
+    static assert(getAnnotations!(ClassWithAnn).length == 1);
+    static assert(!__traits(compiles, getAnnotations!(ShouldFail)));
+}

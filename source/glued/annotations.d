@@ -4,6 +4,9 @@ import std.conv;
 import std.traits;
 import std.meta;
 
+import glued.utils;
+
+//todo introduce RAW_STRUCT and friends, TEMPLATE, and then STRUCT = RAW_STRUCT | TEMPLATE
 enum TargetType {
     MODULE = 0, //non-target 
     FUNCTION = 1<<0,
@@ -48,21 +51,36 @@ mixin template TargetTypeAnnotationBody() {
  * This is core facility of annotation validation, so it won't be checked itself,
  * and won't have any annotations. If it would be annotated, UDAs would look like
  *     @OnAnnotation()
- * 
+ *     @Repeatable(ANY_NUMBER)
+ * todo this is already outdated
  * @param Checker - template that evaluates to enum of type bool; it should take
  *                  single parameter, which would be annotated target. Result of
  *                  its evaluation will be subject to static assertion when 
  *                  retrieving parameters annotations, so don't use this module
  */
-struct CheckedBy(Checker){
+struct CheckedBy(alias Checker){
     alias Check = Checker;
+    
+    static bool check(T...)(){
+        return Checker!(T)();
+    }
+}
+
+bool TargetChecker(alias target, alias annotation, alias constraint)(){
+    return constraint.canAnnotate(TargetTypeOf!(target));
+}
+
+bool TargetOwnerChecker(alias target, alias annotation, alias constraint)(){
+    return constraint.canAnnotate(TargetTypeOf!(__traits(parent, target)));
 }
 
 @OnAnnotation
+@CheckedBy!(TargetChecker)
 struct Target {
     mixin TargetTypeAnnotationBody;
 }
 
+@CheckedBy!(TargetOwnerChecker)
 @OnAnnotation
 struct TargetOwner {
     mixin TargetTypeAnnotationBody;
@@ -93,7 +111,7 @@ template TargetTypeOf(T...) if (T.length == 1) {
             enum TargetTypeOf = TargetType.ENUM;
         }
     } else {
-        
+        //todo what about templates? template ... { class ... }}
         static assert(false, "support for methods and fields is coming");
     }
 }
@@ -109,11 +127,11 @@ struct Implies(S) if (is(S == struct)) { //todo if isAnnotation?
 }
 
 struct Implies(alias S) if (is(typeof(S) == struct)) { //todo ditto
-    const typeof(S) implicated = S;
-    
-    template getImplicated(){
-        alias getImplicated = Alias!(S);
-    }
+    const typeof(S) implicated = S; 
+     
+    template getImplicated(){ 
+        alias getImplicated = Alias!(S); 
+    } 
 }
 
 //todo wrong name
@@ -137,7 +155,7 @@ template expandToData(alias X){
             enum expandToData = expandToData!(templateInstance);
         }
     } else {
-            static if (is(X)){
+        static if (is(X)){
             static if (is(X == struct)) {
                 enum expandToData = X.init;
             } else {
@@ -149,26 +167,18 @@ template expandToData(alias X){
     }
 }
 
-template getType(alias X) if (!is(X)) {
-    alias getType = typeof(X);
-}
-
 template getExplicitAnnotations(alias M) {
     alias getExplicitAnnotations = Filter!(onlyStructs, staticMap!(expandToData, __traits(getAttributes, M)));
 }
 
 template getExplicitAnnotationTypes(alias M) {
-    alias getExplicitAnnotationTypes= staticMap!(getType, getExplicitAnnotations!M);
+    alias getRawType(alias T) = typeof(T);
+    alias getExplicitAnnotationTypes= NoDuplicates!(staticMap!(toType, getExplicitAnnotations!M), staticMap!(getRawType, getExplicitAnnotations!M));
 }
 
 template getImplicitAnnotations(alias M) {
     template toTypes(X...) {
-        alias toType(alias X) = typeof(X);
         alias toTypes = staticMap!(toType, X);
-    }
-    
-    template hackMe(alias X){
-        alias hackMe = extractImplicit!X;
     }
 
     template extractImplicit(alias A) {
@@ -176,9 +186,9 @@ template getImplicitAnnotations(alias M) {
     //add local Implies, profit
 //todo
 //        static assert isAnnotation!A;
-        alias unpack(I) = I.getImplicated!();
-        alias implications = getUDAs!(A, Implies);
-        alias locallyImplicated = staticMap!(unpack, implications);
+        alias unpack(I) = I.getImplicated!(); 
+        alias implications = getUDAs!(A, Implies); 
+        alias locallyImplicated = staticMap!(unpack, implications); 
         static if (locallyImplicated.length > 0) 
         {
             template step(int i, Acc...){
@@ -198,15 +208,27 @@ template getImplicitAnnotations(alias M) {
         }
     }
     
-    alias getImplicitAnnotations = staticMap!(extractImplicit, toTypes!(getExplicitAnnotations!M));
+    alias getImplicitAnnotations = staticMap!(extractImplicit, getExplicitAnnotationTypes!M);
 }
 
 alias getUncheckedAnnotations(alias M) = AliasSeq!(NoDuplicates!(AliasSeq!(getExplicitAnnotations!M, getImplicitAnnotations!M)));
 
-template performCheck(alias M){
-    template on(alias A){
-        //asserts
-        alias on = A;
+template performCheck(alias AnnotatedTarget){ // e.g. newly declared interface
+    template getCheckers(alias constraint){
+        alias getCheckers = staticMap!(expandToData, getUDAs!(typeof(constraint), CheckedBy));
+    }
+
+    template on(alias AnnotationOccurence){ //e.g. Component() (notice that it's value, not type)
+        alias constraints = getExplicitAnnotations!(typeof(AnnotationOccurence)); // e.g. Repeatable(ONCE) (ditto); todo: maybe checked?
+        static foreach (constraint; constraints){ // Repeatable(...) annotated with CheckedBy!(...)
+            static foreach (checker; getCheckers!(constraint)){
+                import std.conv;
+                import std.traits;
+                //todo message should be configurable next to CheckedBy
+                static assert(checker.check!(AnnotatedTarget, AnnotationOccurence, constraint)(), "Constraint "~to!string(constraint)~" for annotation "~to!string(AnnotationOccurence)~" on target "~fullyQualifiedName!(AnnotatedTarget));
+            }
+        }
+        alias on = AnnotationOccurence;
     }
 }
 
