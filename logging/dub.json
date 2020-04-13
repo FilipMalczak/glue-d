@@ -1,0 +1,23 @@
+{
+    "authors": [
+        "Filip Malczak"
+    ],
+    "copyright": "Copyright © 2019, Filip Malczak",
+    "description": "With 'optional' being a sole dependency provides unified logging for compile- and runtime",
+    "license": "Apache 2.0",
+    "name": "logging",
+    "dependencies": {
+        "optional": "~>1.0.0",
+        "unit-threaded": "~>0.10.8"
+    },
+    "targetType": "library",
+    "configurations": [
+        {
+            "name": "unittest",
+            "sourcePaths": [
+                "test"
+            ],
+            "targetType": "executable"
+        }
+    ]
+}

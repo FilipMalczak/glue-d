@@ -1,0 +1,23 @@
+{
+	"authors": [
+		"Filip Malczak"
+	],
+	"configurations": [
+		{
+			"name": "unittest",
+			"sourcePaths": [
+				"test"
+			],
+			"targetType": "executable"
+		}
+	],
+	"copyright": "Copyright © 2019, Filip Malczak",
+	"dependencies": {
+		"glue-d:utils": "*",
+		"unit-threaded": "~>0.10.8"
+	},
+	"description": "Annotations = DLang UDAs - the good parts; each annotation needs to be a value, there are extendable facilities to control usage (repetitions, targets, etc) of annotations and to query for them.",
+	"license": "Apache 2.0",
+	"name": "annotations",
+	"targetType": "library"
+}

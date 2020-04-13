@@ -1,44 +1,50 @@
 {
-	"authors": [
-		"Filip Malczak"
-	],
-	"configurations": [
-		{
-			"name": "unittest",
-			"sourcePaths": [
-				"test"
-			],
-			"targetType": "executable",
-			"versions": [
-				"debug_glued_scan",
-				"debug_glued_context",
-				"debug_glued_context_runtime"
-			]
-		},
-		{
-			"dependencies": {
-				"glue-d:indexer": ">=0.0.0"
-			},
-			"mainSourceFile": "index_entrypoint.d",
-			"name": "indexer",
-			"sourceFiles": [
-				"index_entrypoint.d"
-			],
-			"targetType": "executable"
-		}
-	],
-	"copyright": "Copyright © 2019, Filip Malczak",
-	"dependencies": {
-		"glue-dejector": ">=0.2.0",
-		"mirror": "~>0.1.9",
-		"optional": "~>1.0.0",
-		"unit-threaded": "~>0.10.8"
-	},
-	"description": "autoscanning + DI (with dejector fork) + ...",
-	"license": "Apache 2.0",
-	"name": "glue-d",
-	"subPackages": [
-		"./indexer/"
-	],
-	"targetType": "library"
+    "authors": [
+        "Filip Malczak"
+    ],
+    "configurations": [
+        {
+            "name": "unittest",
+            "sourcePaths": [
+                "test"
+            ],
+            "targetType": "executable",
+            "versions": [
+                "debug_glued_scan",
+                "debug_glued_context",
+                "debug_glued_context_runtime"
+            ]
+        },
+        {
+            "dependencies": {
+                "glue-d:indexer": ">=0.0.0"
+            },
+            "mainSourceFile": "index_entrypoint.d",
+            "name": "indexer",
+            "sourceFiles": [
+                "index_entrypoint.d"
+            ],
+            "targetType": "executable"
+        }
+    ],
+    "copyright": "Copyright © 2019, Filip Malczak",
+    "dependencies": {
+        "glue-dejector": ">=0.2.0",
+        "mirror": "~>0.1.9",
+        "optional": "~>1.0.0",
+        "unit-threaded": "~>0.10.8",
+        "glue-d:utils": "*",
+        "glue-d:logging": "*",
+        "glue-d:annotations": "*"
+    },
+    "description": "autoscanning + DI (with dejector fork) + ...",
+    "license": "Apache 2.0",
+    "name": "glue-d",
+    "subPackages": [
+        "./indexer/",
+        "./utils/",
+        "./logging/",
+        "./annotations/"
+    ],
+    "targetType": "library"
 }
