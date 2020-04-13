@@ -1,17 +1,24 @@
+/**
+ * These are core annotations for the whole framework. To avoid recursive checks,
+ * they are not annotated with constraints, but supported usage is documented 
+ * with annotations in doc comments.
+ */
 module glued.annotations.core_annotations;
 
 import std.meta: Alias;
+import std.traits: hasUDA;
 
 /**
  * This is core facility of annotation validation, so it won't be checked itself,
  * and won't have any annotations. If it would be annotated, UDAs would look like
- *     @OnAnnotation()
+ *     @OnAnnotation
  *     @Repeatable(ANY_NUMBER)
+ *     @NonImplicable
  * todo this is already outdated
- * @param Checker - template that evaluates to enum of type bool; it should take
- *                  single parameter, which would be annotated target. Result of
- *                  its evaluation will be subject to static assertion when 
- *                  retrieving parameters annotations, so don't use this module
+ * @param Checker - bool foo(alias target, alias annotation, alias constraint)()
+ *                  e.g. foo(UserController, Controller(), Target(CLASS)) - notice 
+ *                      that target is symbol, while annotation and its constraint
+ *                      are values
  */
 struct CheckedBy(alias Checker){
     alias Check = Checker;
@@ -21,10 +28,16 @@ struct CheckedBy(alias Checker){
     }
 }
 
+/**
+ * If this annotation is present on another annotation, the annotated one cannot
+ * be subject of Implies!(...).
+ */
+struct NonImplicable {}
 
 //todo this can be easily replaced with inner aliases...
 //todo disable constructors
 struct Implies(S) if (is(S == struct)) { //todo if isAnnotation?
+    static assert(!hasUDA!(S, NonImplicable), "Annotation "~fullyQualifiedName!S~" is not implicable and as such cannot be used in Implies!(...)");
     const S implicated = S.init;
     
     template getImplicated(){
@@ -33,6 +46,7 @@ struct Implies(S) if (is(S == struct)) { //todo if isAnnotation?
 }
 
 struct Implies(alias S) if (is(typeof(S) == struct)) { //todo ditto
+    static assert(!hasUDA!(typeof(S), NonImplicable), "Annotation "~fullyQualifiedName!(typeof(S))~" is not implicable and as such cannot be used in Implies!(...)");
     const typeof(S) implicated = S; 
      
     template getImplicated(){ 

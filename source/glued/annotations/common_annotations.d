@@ -41,6 +41,7 @@ struct TargetOwner {
 @TargetOwner(TargetType.TYPE)
 struct OnStatic {}
 
-@Target(TargetType.STRUCT)
-struct OnAnnotation {}
+enum OnAnnotation = Target(TargetType(TargetType.STRUCT));
 alias Metaannotation = OnAnnotation;
+
+

@@ -118,7 +118,28 @@ class ClassWithAnn {}
 @AnnForClasses
 struct ShouldFail {}
 
+@OnAnnotation
+struct MetaAnn {}
+
+@MetaAnn
+struct Ann {}
+
+@MetaAnn
+interface NonAnn {}
+
 unittest {
-    static assert(getAnnotations!(ClassWithAnn).length == 1);
+    static assert(getAnnotations!(ClassWithAnn) == AliasSeq!(AnnForClasses()));
     static assert(!__traits(compiles, getAnnotations!(ShouldFail)));
+    static assert(getAnnotations!(Ann) == AliasSeq!(MetaAnn()));
+    static assert(!__traits(compiles, getAnnotations!(NonAnn)));
+}
+
+@NonImplicable
+struct NonImpl {}
+
+unittest {
+    static assert(__traits(compiles, Implies!(Ann)));
+    static assert(__traits(compiles, Implies!(Ann())));
+    static assert(!__traits(compiles, Implies!(NonImpl)));
+    static assert(!__traits(compiles, Implies!(NonImpl())));
 }
