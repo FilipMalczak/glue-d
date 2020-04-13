@@ -9,6 +9,7 @@ struct St {}
 enum E;   
 
 unittest {
+    import glued.annotations.common_impl;
     with (TargetType) {
         static assert(TargetTypeOf!I == INTERFACE);
         static assert(TargetTypeOf!C == CLASS);
@@ -44,6 +45,7 @@ struct A2{}
 struct A3{}
 
 unittest {
+    import glued.annotations.core_impl;
     static assert(getExplicitAnnotations!A1 == AliasSeq!(X(), Y(), Z(1)));
     static assert(getExplicitAnnotations!A2 == AliasSeq!(X(), Y()));
     static assert(getExplicitAnnotations!A3 == AliasSeq!(X(), Y(), Z()));
@@ -79,6 +81,7 @@ struct T3 {}
 struct T4 {}
 
 unittest {
+    import glued.annotations.core_impl;
     static assert(getImplicitAnnotations!(T1).length == 0);
     static assert(getImplicitAnnotations!(T2) == AliasSeq!(S(1)));
     static assert(getImplicitAnnotations!(T3) == AliasSeq!(S(2)));
