@@ -143,3 +143,45 @@ unittest {
     static assert(!__traits(compiles, Implies!(NonImpl)));
     static assert(!__traits(compiles, Implies!(NonImpl())));
 }
+
+@Repeatable(between(2, 4))
+struct Repeated{
+    int x;
+}
+
+@Repeated
+struct NOK1 {}
+
+@Repeated
+@Repeated(0)
+struct NOK1_duplicatedDefault {}
+
+@Repeated
+@Repeated(2)
+struct OK2 {}
+
+@Repeated
+@Repeated(2)
+@Repeated(3)
+struct OK3 {}
+
+@Repeated
+@Repeated(0)
+@Repeated(2)
+@Repeated(3)
+struct OK3_duplicateOf0 {}
+
+@Repeated
+@Repeated(2)
+@Repeated(3)
+@Repeated(4)
+struct NOK4 {}
+
+unittest {
+    static assert(!__traits(compiles, getAnnotations!NOK1));
+    static assert(!__traits(compiles, getAnnotations!NOK1_duplicatedDefault));
+    static assert(getAnnotations!OK2 == AliasSeq!(Repeated(0), Repeated(2)));
+    static assert(getAnnotations!OK3 == AliasSeq!(Repeated(0), Repeated(2), Repeated(3)));
+    static assert(getAnnotations!OK3_duplicateOf0 == AliasSeq!(Repeated(0), Repeated(2), Repeated(3)));
+    static assert(!__traits(compiles, getAnnotations!NOK4));
+}

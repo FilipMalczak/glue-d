@@ -1,5 +1,7 @@
 module glued.annotations.common_impl;
 
+import glued.utils;
+
 //todo introduce RAW_STRUCT and friends, TEMPLATE, and then STRUCT = RAW_STRUCT | TEMPLATE
 enum TargetType {
     MODULE = 0, //non-target 
@@ -50,3 +52,10 @@ template TargetTypeOf(T...) if (T.length == 1) {
     }
 }
 
+bool RepeatableChecker(alias target, alias annotation, alias constraint)(){
+    import glued.annotations.core_impl: getUncheckedAnnotations;
+    import std.meta: Filter;
+    
+    immutable occurences = Filter!(ofType!(toType!(annotation)), getUncheckedAnnotations!(target)).length; 
+    return constraint.boundaries.check(occurences);
+}

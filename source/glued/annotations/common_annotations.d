@@ -31,12 +31,13 @@ struct Target {
     mixin TargetTypeAnnotationBody;
 }
 
-@CheckedBy!(TargetOwnerChecker)
 @OnAnnotation
+@CheckedBy!(TargetOwnerChecker)
 struct TargetOwner {
     mixin TargetTypeAnnotationBody;
 }
 
+//todo missing checker, TemplateOf cannot find CODE pieces yet
 @Target(TargetType.CODE)
 @TargetOwner(TargetType.TYPE)
 struct OnStatic {}
@@ -44,4 +45,44 @@ struct OnStatic {}
 enum OnAnnotation = Target(TargetType(TargetType.STRUCT));
 alias Metaannotation = OnAnnotation;
 
+struct RepetitionBoundaries {
+    size_t lowerInc;
+    size_t upperExc;
+    
+    //this() assert both are positive
+    
+    bool check(int occurences){
+        return occurences >= lowerInc && occurences < upperExc;
+    }
+}
 
+RepetitionBoundaries exactly(size_t i){
+    return RepetitionBoundaries(i, i+1);
+}
+
+RepetitionBoundaries atLeast(size_t i){
+    return RepetitionBoundaries(i, size_t.max); //todo infinity?
+}
+
+RepetitionBoundaries atMost(size_t i){
+    return RepetitionBoundaries(0, i+1);
+}
+
+alias between = RepetitionBoundaries;
+
+enum exactlyOnce = exactly(1);
+
+enum atLeastOnce = atLeast(1);
+
+enum atMostOnce = atMost(1);
+alias optional = atMostOnce;
+
+enum notAtAll = RepetitionBoundaries(0, 0);
+
+enum anyNumber = RepetitionBoundaries(0, size_t.max);
+
+@Metaannotation
+@CheckedBy!(RepeatableChecker)
+struct Repeatable {
+    RepetitionBoundaries boundaries;
+}
