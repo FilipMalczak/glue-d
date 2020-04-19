@@ -1,7 +1,6 @@
 module foo.operators;
 
-import glued.stereotypes;
-import glued.context;
+import glued.context.annotations;
 
 interface Operator {
     int apply(int a, int b);

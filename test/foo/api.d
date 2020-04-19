@@ -1,7 +1,6 @@
 module foo.api;
 
-import glued.stereotypes;
-import glued.context; //ditto from operators
+import glued.context.annotations; //ditto from operators
 
 import foo.operators;
 

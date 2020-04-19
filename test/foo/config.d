@@ -1,7 +1,6 @@
 module foo.config;
 
-//import poodinis;
-import glued.stereotypes;
+import glued.context.annotations;
 
 import foo.operators;
 
