@@ -10,6 +10,8 @@
             ],
             "targetType": "executable",
             "versions": [
+                "dejector_trace",
+                "debug_glued_collections_reference",
                 "debug_glued_scan",
                 "debug_glued_context",
                 "debug_glued_context_runtime"
@@ -29,7 +31,7 @@
     ],
     "copyright": "Copyright © 2019, Filip Malczak",
     "dependencies": {
-        "glue-dejector": ">=0.2.0",
+        "glue-dejector": ">=0.3.1",
         "mirror": "~>0.1.9",
         "optional": "~>1.0.0",
         "unit-threaded": "~>0.10.8",

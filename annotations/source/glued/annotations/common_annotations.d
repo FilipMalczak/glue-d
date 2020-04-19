@@ -49,6 +49,12 @@ struct RepetitionBoundaries {
     size_t lowerInc;
     size_t upperExc;
     
+    invariant {
+        assert(lowerInc >= 0);
+        assert(upperExc > 0);
+        assert(lowerInc < upperExc);
+    }
+    
     //this() assert both are positive
     
     bool check(int occurences){

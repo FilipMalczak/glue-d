@@ -57,7 +57,7 @@ string format(LogEvent e){
     //todo enforce filename length in similar fashion; probably wrap these functions into struct that takes separator as field
     string filename = e.eventLocation.filename;
     string tid;
-    return to!string(e.eventLocation.line).leftJustify(4)~" :: "~filename.leftJustify(40)~" @ "~
+    return (filename~":"~to!string(e.eventLocation.line)).leftJustify(45)~" @ "~
     ( e.timestamp.empty ? 
         "N/A (compile-time)".center(25, ' ') : 
         e.timestamp.front().to!string.cutDown(25).leftJustify(25, ' ')
@@ -77,12 +77,10 @@ struct DefaultStaticSink {
 
     static string consumer(alias e)(){ // LogEvent e
         string versionToEnable = "debug_"~(e.loggerLocation.moduleName.replace(".", "_"));
-//        pragma(msg, "consuming ", e, " VERSION ", "debug_"~(e.loggerLocation.moduleName.replace(".", "_")));
         return "version("~versionToEnable~"){ pragma(msg, format(e)); }";
     }
 
     static void consume(LogEvent e)(){
-//        pragma(msg, "CONSUMER ", e.message, " ; ", consumer!(e)());
         mixin(consumer!(e)());
     }
 }
@@ -95,7 +93,9 @@ class StdoutSink: LogSink {
     import std.stdio;
         
     override void consume(LogEvent e){
+        //todo if dev is used, be angry? I mean, that method shouldn't be used in the final commit
         stdout.writeln(format(e));
+        stdout.flush();
     }
 }
 
@@ -423,7 +423,7 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
         
         struct LogClosure(string f=__FILE__, int l=__LINE__, string m=__MODULE__, string foo=__FUNCTION__,  string prettyFoo=__PRETTY_FUNCTION__) {
             void Emit(Level level, T...)(){
-                config.StaticLogSink.consume!(event(level, msg!T, CodeLocation(f, l, m, "", foo, prettyFoo), config.figureOutEventAggregate))();
+                config.StaticLogSink.consume!(event(level, txt!T, CodeLocation(f, l, m, "", foo, prettyFoo), config.figureOutEventAggregate))();
             }
         }
         
@@ -493,7 +493,7 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
             mixin LevelMixin!(t.s, t.r, t.m);
         }
     
-        static string msg(T...)(){
+        static string txt(T...)(){
             string asString(X...)(){
                 static if (is(X)){
                     return fullyQualifiedName!X;

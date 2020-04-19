@@ -1,6 +1,8 @@
 module glued.utils;
 
 import std.meta;
+import std.range;
+import std.traits;
 
 struct StringBuilder {
     string result;
@@ -26,6 +28,7 @@ template toType(alias T){
     } else {
         alias toType = typeof(T);
     }
+    //todo message
     static assert(isType!(toType)); //to fail on functions, methods, etc
 }
 
@@ -35,3 +38,19 @@ template toAnnotableType(alias T){
 }
 
 enum isType(T) = (__traits(isTemplate, T) || is(T == class) || is(T == interface) || is(T == struct) || is(T == enum));
+
+enum isRangeOf(R, T) = isInputRange!T && is(ReturnType!((R r) => r.front()): T);
+
+//todo remove these from dejector, make dependency on utils and logging from there
+enum isObjectType(T) = is(T == interface) || is(T == class);
+enum isValueType(T) = is(T == struct) || is(T==enum);
+
+T nonNull(T)(T t) if (isObjectType!T) {
+    assert(t !is null); //todo exception
+    return t;
+}
+
+bool isInstance(T, V)(V v) if (isObjectType!T && isObjectType!V){
+    T t = cast(T) v;
+    return t !is null;
+}

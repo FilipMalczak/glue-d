@@ -26,7 +26,6 @@ unittest {
     template aggrPred(string m, string n) {
         alias aggrPred = (x) => x.moduleName == m && x.aggregate.identifier == n;
     }
-    writeln(ctx.tracked);
     
     assert(ctx.tracked.find!(aggrPred!("ex1.scan_aggregates", "X")));
     assert(ctx.tracked.find!(aggrPred!("ex1.scan_aggregates", "Y")));

@@ -3,6 +3,8 @@ module glued.context;
 
 import std.variant;
 import std.meta;
+import std.array;
+import std.algorithm;
 import std.traits;
 import std.string: join;
 import std.functional : toDelegate;
@@ -13,6 +15,7 @@ import glued.mirror;
 import glued.scan;
 import glued.utils;
 import glued.logging;
+import glued.collections;
 
 import dejector;
 
@@ -101,11 +104,11 @@ auto resolveCall(R, P...)(Dejector injector, R delegate(P) toCall){
     }
 }
 
-struct GluedCoreProcessor {
+struct ConcreteTypesProcessor {
     mixin CreateLogger;
     Logger log;
 
-    void before(){}
+    void before(GluedInternals internals){}
     
     static bool canHandle(A)(){
         return is(A == class) && (isMarkedAsStereotype!(A, Component) || isMarkedAsStereotype!(A, Configuration) );
@@ -116,14 +119,14 @@ struct GluedCoreProcessor {
             import std.stdio;
             import std.traits;
             log.info.emit("Binding ", fullyQualifiedName!A);
-            internals.injector.bind!(A)(new ComponentClassProvider!A(internals.injector));
+            internals.injector.bind!(A)(new ComponentClassProvider!A(log.logSink));
             log.info.emit("Bound ", fullyQualifiedName!A, " based on its class definition");
         }
         static if (isMarkedAsStereotype!(A, Configuration)){
             import std.stdio;
             import std.traits;
             log.info.emit("Binding based on configuration ", fullyQualifiedName!A);
-            internals.injector.bind!(A, Singleton)(new ComponentClassProvider!A(internals.injector));
+            internals.injector.bind!(A, Singleton)(new ComponentClassProvider!A(log.logSink));
             A a;
             static foreach (name; __traits(allMembers, A)){
                 static if (__traits(getProtection, __traits(getMember, A, name)) == "public" &&
@@ -133,13 +136,13 @@ struct GluedCoreProcessor {
                                 static if (!hasAnnotation!(overload, IgnoreResultBinding)){
                                     //todo reuse the same provider for many bindings
                                     log.info.emit("Binding type "~fullyQualifiedName!(ReturnType!overload)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
-                                    internals.injector.bind!(ReturnType!overload)(new ConfigurationMethodProvider!(A, name, i)(internals.injector));
+                                    internals.injector.bind!(ReturnType!overload)(new ConfigurationMethodProvider!(A, name, i)(log.logSink));
                                     log.info.emit("Bound "~fullyQualifiedName!(ReturnType!overload)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
                                 } //todo else assert exactly one ignore and any Bind
                                 
                                 static foreach (bind; getAnnotations!(overload, Bind)){
                                     log.info.emit("Binding type "~fullyQualifiedName!(Bind.As)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
-                                    internals.injector.bind!(Bind.As)(new ConfigurationMethodProvider!(A, name, i)(internals.injector));
+                                    internals.injector.bind!(Bind.As)(new ConfigurationMethodProvider!(A, name, i)(log.logSink));
                                     log.info.emit("Bound "~fullyQualifiedName!(Bind.As)~" with method ", fullyQualifiedName!A, ".", name, "[#", i, "]");
                                 }
                             }
@@ -151,7 +154,7 @@ struct GluedCoreProcessor {
     }
 
     
-    void after(){}
+    void after(GluedInternals internals){}
 }
 
 //todo good start, but lets keep it simple
@@ -277,15 +280,13 @@ class ComponentSeedInitializer(T): InstanceInitializer!(T, false) {
 //todo is(class)
 class ComponentClassProvider(T): Provider {
     mixin CreateLogger;
-    private Dejector injector;
     private Logger log;
     
-    this(Dejector injector){
-        this.injector = injector;
-        log = Logger(injector.get!(LogSink));
+    this(LogSink logSink){
+        log = Logger(logSink);
     }
     
-    override Initialization get(){
+    override Initialization get(Dejector injector){
         log.debug_.emit("Building seed of type ", fullyQualifiedName!T);
         auto seed = cast(T) _d_newclass(T.classinfo);
         log.debug_.emit("Built seed ", &seed, " of type ", fullyQualifiedName!T);
@@ -295,29 +296,17 @@ class ComponentClassProvider(T): Provider {
 
 class ConfigurationMethodProvider(C, string name, size_t i): Provider {
     mixin CreateLogger;
-    private Dejector injector;
     private Logger log;
     
-    this(Dejector injector){
-        this.injector = injector;
-        log = Logger(injector.get!(LogSink));
+    this(LogSink logSink){
+        log = Logger(logSink);
     }
     
-    override Initialization get(){
+    override Initialization get(Dejector injector){
         log.debug_.emit("Resolving configuration class instance ", fullyQualifiedName!C);
         C config = injector.get!C;
         log.debug_.emit("Resolved configuration class ", fullyQualifiedName!C, " instance ", &config);
         log.debug_.emit("Building configuration method ", fullyQualifiedName!C, ".", name);
-//        ReturnType!(__traits(getOverloads, config, name)[i]) foo(){
-//            template step(int i, acc...){
-//                static if (acc.length == Parameters!(__traits(getOverloads, config, name)[i]).length){
-//                    alias step = acc;
-//                } else {
-//                    alias step = step!(i+1, AliasSeq!(acc, injector.get!(Parameters!(__traits(getOverloads, config, name)[i])[i])));
-//                }
-//            }
-//            return __traits(getOverloads, config, name)[i](step!0);
-//        }
         auto instance = resolveCall(injector, &(__traits(getOverloads, config, name)[i]));
         enum isSeed = hasOneAnnotation!(__traits(getOverloads, C, name)[i], Seed); //todo assert not has many
         log.debug_.emit("Built initialized instance ", &instance, " method ", fullyQualifiedName!C, ".", name);
@@ -326,43 +315,200 @@ class ConfigurationMethodProvider(C, string name, size_t i): Provider {
     }
 }
 
+class InterfaceAutobindingSingleton: Singleton {}
+
+struct InterfaceProcessor {
+    mixin CreateLogger;
+    Logger log;
+
+    void before(GluedInternals internals){
+        internals.injector.bindScope!(InterfaceAutobindingSingleton)();
+    }
+    
+    static bool canHandle(A)(){
+        //todo reuse isObjectType from dejector
+        return is(A == interface) || is(A == class);
+    }
+    
+    void handle(A)(GluedInternals internals){
+        immutable key = fullyQualifiedName!A; //todo queryString?
+        log.debug_.emit("Handling ", key);
+        static if (is(A == interface)){
+            immutable kind = TypeKind.INTERFACE;
+        } else {
+            static if (__traits(isAbstractClass, A))
+                immutable kind = TypeKind.ABSTRACT_CLASS;
+            else
+                immutable kind = TypeKind.CONCRETE_CLASS;   
+        }
+        log.debug_.emit("Kind: ", kind);
+        internals.inheritanceIndex.markExists(key, kind);
+        import std.traits;
+        static foreach (b; BaseTypeTuple!A){
+            static if (!is(b == Object)){
+                //todo ditto
+                log.trace.emit(fullyQualifiedName!A, " extends ", fullyQualifiedName!b);
+                internals.inheritanceIndex.markExtends(fullyQualifiedName!A, fullyQualifiedName!b);
+                handle!(b)(internals);
+            }
+        }
+    }
+    
+    void after(GluedInternals internals){
+        import std.array;
+        log.debug_.emit("Index: ", internals.inheritanceIndex);
+        log.debug_.emit("Found interfaces: ", internals.inheritanceIndex.find(TypeKind.INTERFACE));
+        foreach (i; internals.inheritanceIndex.find(TypeKind.INTERFACE)){
+            auto impls = internals.inheritanceIndex.getImplementations(i).array;
+            auto resolved = internals.injector.resolveQuery(i);
+            if (!resolved.empty && resolved.front == i)
+                impls ~= i;
+            if (impls.empty) {
+                log.warn.emit("Interface "~i~" has no known implementations");
+            } else {
+                if (resolved.empty && impls.length == 1){
+                    log.debug_.emit("Interface "~i~" has a sole implementation "~impls[0]~", binding them");
+                    internals.injector.bind(i, impls[0]);
+                }
+            }
+            //todo add control mechanism to disable binding impl list
+            auto arrayType = fullyQualifiedName!Reference~"!("~i~"[])";
+            auto canResolve = internals.injector.canResolve(arrayType);
+            if (!canResolve){
+                auto foo(Dejector dej) {
+                    auto impls = internals.inheritanceIndex.getImplementations(i);
+                    Object[] instances = impls.filter!(x => dej.canResolve(x)).map!(x => nonNull(dej.get!Object(x))).array;
+                    //fixme following line of log caused a segfault; just goddamn WHY ; I think it's because log is declared outside of foo scope
+                    //log.dev.emit("Instances: ", instances);
+                    auto result = new Reference!(Object[])(instances);
+                    return result;
+                }
+                auto result = foo(internals.injector);
+                //todo this was initially supposed to be lazy and IMO it should still be
+                log.debug_.emit("Binding ", arrayType, " with an array of all known implementations of "~i~" -> ", result);
+                internals.injector.bind!(InterfaceAutobindingSingleton)(arrayType, new InstanceProvider(result));
+                //internals.injector.bind!(InterfaceAutobindingSingleton)(arrayType, new FunctionProvider(toDelegate(&foo)));
+            }
+            
+        }
+    }
+}
+
+enum TypeKind { INTERFACE, ABSTRACT_CLASS, CONCRETE_CLASS }
+
+class InheritanceIndex {
+    import std.algorithm;
+    TypeKind[string] kinds;
+    Set!(string)[string] implementations;
+    mixin CreateLogger;
+    Logger log;
+    
+    this(LogSink logSink){
+        log = Logger(logSink);
+    }
+    
+    override string toString(){
+        import std.conv: to;
+        return typeof(this).stringof~"(kinds="~to!string(kinds)~", implementations="~to!string(implementations)~")";
+    }
+    
+    void markExists(string query, TypeKind kind){
+        log.debug_.emit(query, " is of kind ", kind);
+        if (query in kinds){
+            assert(kinds[query] == kind); //todo better exception
+            log.debug_.emit("Checks out with previous knowledge");
+        } else {
+            kinds[query] = kind;
+            log.debug_.emit("That's new knowledge");
+        }
+    }
+    
+    void markExtends(string extending, string extended){
+        log.debug_.emit(extending, " extends ", extended);
+        if (!(extended in implementations))
+            implementations[extended] = Set!string();
+        log.debug_.emit(extending, " extends ", extended, " ; ", implementations[extended]);
+        implementations[extended] ~= extending;
+    }
+    
+    TypeKind getTypeKind(string typeName){
+        return TypeKind.INTERFACE;
+    }
+    
+    auto getDirectSubtypes(string typeName){
+        if (typeName in implementations)
+            return implementations[typeName];
+        return Set!(string)();
+    }
+    
+    Set!string getSubtypes(string typeName){
+        auto direct = getDirectSubtypes(typeName);
+        return direct ~ (direct.empty? [] : direct.map!(d => getSubtypes(d)).fold!((x, y) => x~y).array);
+    }
+    
+    auto getImplementations(string typeName){
+        return getSubtypes(typeName).filter!(n => kinds[n] == TypeKind.CONCRETE_CLASS);
+    }
+    
+    auto getDirectImplementations(string typeName){
+        return getDirectSubtypes(typeName).filter!(n => kinds[n] == TypeKind.CONCRETE_CLASS);
+    }
+    
+    auto find(TypeKind kind){
+        import std.range;
+        import std.traits;
+        enum isRangeOf(R, T) = isInputRange!T && is(ReturnType!((R r) => r.front()): T);
+        return kinds.keys().filter!(x => kinds[x] == kind);
+    }
+    
+}
+
 struct GluedInternals {
     Dejector injector;
+    LogSink logSink;
+    InheritanceIndex inheritanceIndex;
 }
 
 class GluedContext(Processors...) {
-    private LogSink logSink;
     private GluedInternals internals;
     mixin CreateLogger;
     private Logger log;
     
     alias processors = AliasSeq!(Processors);
     
+    @property //fixme should it be private?
+    private LogSink logSink(){
+        return internals.logSink;
+    }
+    
     this(LogSink logSink){
-        this.logSink = logSink;
         this.log = Logger(logSink);
-        internals = GluedInternals(new Dejector());
+        internals = GluedInternals(new Dejector(), logSink, new InheritanceIndex(logSink));
         internals.injector.bind!(Dejector)(new InstanceProvider(internals.injector));
         internals.injector.bind!(LogSink)(new InstanceProvider(cast(Object) logSink));
     }
     
     private void before(){
         static foreach (P; processors)
-            P(P.Logger(logSink)).before();
+            P(P.Logger(logSink)).before(internals);
     }
     
     private void after(){
         static foreach (P; processors)
-            P(P.Logger(logSink)).after();
+            P(P.Logger(logSink)).after(internals);
     }
     
     void scan(alias scannables)(){
         enum scanConsumer(string m, string n) = "track!(\""~m~"\", \""~n~"\")();";
         mixin unrollLoopThrough!(scannables, "void doScan() { ", scanConsumer, "}");
         
+        log.info.emit("Before ", scannables);
         before();
+        log.info.emit("Scanning ", scannables);
         doScan();
+        log.info.emit("After ", scannables);
         after();
+        log.info.emit("Scan of ", scannables, " finished");
     }
     
     @property
@@ -370,15 +516,20 @@ class GluedContext(Processors...) {
         return internals.injector;
     }
     
+    @property
+    InheritanceIndex inheritanceIndex(){
+        return internals.inheritanceIndex;
+    }
+    
     void track(string m, string n)(){
-        log.Info.Emit!("Tracking ", m, "::", n);
+        log.info.emit("Tracking ", m, "::", n);
         alias aggr = import_!(m, n);
         static if (qualifiesForTracking!(aggr)()){
-            log.Info.Emit!(m, "::", n, " qualified for tracking by ", typeof(this));
+            log.info.emit(m, "::", n, " qualifies for tracking");
             static foreach (P; processors){
                 static if (P.canHandle!(aggr)()){
-                    log.Info.Emit!("Processor", P, " can handle ", m, "::", n, " when used with ", typeof(this));
-                    P(P.Logger(logSink)).handle!(aggr)(internals);
+                    log.info.emit("Processor", fullyQualifiedName!P, " can handle ", m, "::", n);
+                    P(P.Logger(logSink)).handle!(aggr)(internals); //todo pass sink only, let P create Logger
                 }
             }
         }
@@ -391,4 +542,4 @@ class GluedContext(Processors...) {
     
 }
 
-alias DefaultGluedContext = GluedContext!(GluedCoreProcessor);
+alias DefaultGluedContext = GluedContext!(ConcreteTypesProcessor, InterfaceProcessor);

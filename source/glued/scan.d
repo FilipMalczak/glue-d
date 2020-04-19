@@ -16,13 +16,10 @@ string scanModule(string name, alias consumer)(){
         {
         mixin("static import "~name~";");
         mixin("alias mod_ = "~name~";");
-        builder.append("static import "~name~";");
-        //builder.append("alias mod_ = "~name~";");
         static foreach (alias mem; __traits(allMembers, mod_)){
             static if (__traits(compiles, __traits(getMember, mod_, mem))){
-                static if (is(__traits(getMember, mod_, mem))){// && !is(__traits(getMember, mod_, mem) == enum)){
+                static if (is(__traits(getMember, mod_, mem))){
                     builder.append(consumer!(name, mem));
-//                    BackboneContext.get().track!(Alias!(__traits(getMember, mod_, mem)))();
                 }
             }
         }
