@@ -1,7 +1,5 @@
 module glued.context.resolveCall;
 
-import glued.logging;
-
 import std.traits: moduleName, fullyQualifiedName;
 import std.array: join;
 

@@ -1,19 +1,10 @@
 module glued.context.di.initializers;
 
 import std.meta;
-import std.array;
-import std.algorithm;
 import std.traits;
-import std.string: join;
-import std.functional : toDelegate;
 
-import glued.stereotypes;
-import glued.singleton;
-import glued.mirror;
-import glued.scan;
-import glued.utils;
+import glued.annotations;
 import glued.logging;
-import glued.collections;
 
 import glued.context.di.annotations;
 
