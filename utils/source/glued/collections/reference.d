@@ -31,7 +31,7 @@ version (unittest) {
 }
 
 unittest {
-    X x = new X();
+    X x = X();
     x.x = 3;
     x.foo();
     assert(x.x == 4);
