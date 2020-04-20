@@ -14,25 +14,6 @@ class Reference(T) if (is(T == struct) || is(T == enum) || isArray!T || isAssoci
     T target(){
         return val;
     }
-
-    U castDown(U)(){
-        static if (isArray!T && isArray!U ){
-            alias TVal = ElementType!T;
-            alias UVal = ElementType!U;
-            TVal[] values = target;
-            U result;
-            foreach (v; values){
-                UVal u = cast(UVal) v;
-                if (u is null && v !is null) {
-                    return cast(U) val;
-                }
-                result ~= u;
-            }
-            return result;
-        } else {
-            return cast(U) val;
-        }
-    }
 }
 
 version (unittest) {

@@ -29,6 +29,7 @@ class GluedContext(Processors...) {
         this.log = Logger(logSink);
         internals = GluedInternals(new Dejector(), logSink, new InheritanceIndex(logSink));
         internals.injector.bind!(Dejector)(new InstanceProvider(internals.injector));
+        internals.injector.bind!(InheritanceIndex)(new InstanceProvider(internals.inheritanceIndex));
         internals.injector.bind!(LogSink)(new InstanceProvider(cast(Object) logSink));
     }
 

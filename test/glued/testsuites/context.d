@@ -9,6 +9,8 @@ import glued.logging;
 import glued.collections;
 import glued.utils;
 
+import dejector; //only for queryString - this must stop
+
 unittest {
     auto d = new DefaultGluedContext(new StdoutSink);
 
@@ -65,17 +67,24 @@ unittest {
     writeln("scan finished");
     import ex3.mod;
     import glued.collections.reference;
-    Reference!(Object[]) result = d.injector.get!(Reference!(I1[]), Reference!(Object[]))();
-    I1[] impls = result.castDown!(I1[])();
+    InterfaceResolver resolver = d.injector.get!InterfaceResolver;
+    Object[] objects = resolver.getImplementations(queryString!I1);
+    assert(objects.length == 1);
+    I1[] impls = resolver.getImplementations!I1;
     assert(impls.length == 1);
     assert(impls[0].isInstance!C4);
+    assert(impls[0] is cast(I1)objects[0]);
 
-    Reference!(Object[]) result2 = d.injector.get!(Reference!(I2[]), Reference!(Object[]))();
-    I2[] impls2 = result2.castDown!(I2[])();
+    Object[] objects2 = resolver.getImplementations(queryString!I2);
+    assert(objects2.length == 3);
+    I2[] impls2 = resolver.getImplementations!I2;
     assert(impls2.length == 3);
     assert(impls2[0].isInstance!C3);
+    assert(impls2[0] is cast(I2)objects2[0]);
     assert(impls2[1].isInstance!C4);
+    assert(impls2[1] is cast(I2)objects2[1]);
     assert(impls2[2].isInstance!C5);
+    assert(impls2[2] is cast(I2)objects2[2]);
     //for I2:
     //["ex3.mod.C2", "ex3.mod.C3", "ex3.mod.C4", "ex3.mod.C5"] //without C2 because it is Tracked and not a Component, hence is not instantiable
     writeln("autobinding interfaces passed (very early stage)");
