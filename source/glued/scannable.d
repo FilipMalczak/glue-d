@@ -22,6 +22,10 @@ struct Scannable {
     private static string _prefix(string q){
         return q.length ? "_"~q : "";
     }
+    
+    Scannable withRoot(string r){
+        return Scannable(r, qualifier, testQualifier);
+    }
 }
 
 Scannable at(string root, string qualifier="", string testQualifier="test"){
@@ -29,18 +33,6 @@ Scannable at(string root, string qualifier="", string testQualifier="test"){
 }
 
 Scannable at(Scannable s){
-    return s;
-}
-
-Scannable with_(Scannable s, string r="",string q="", string tq=""){
-    with (s) {
-        if (r)
-            root = r;
-        if (q)
-            qualifier = q;
-        if (tq)
-            testQualifier = tq;
-    }
     return s;
 }
 

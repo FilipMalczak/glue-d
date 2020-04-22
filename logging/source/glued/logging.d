@@ -597,7 +597,7 @@ mixin template CreateLogger(string f=__FILE__, int l=__LINE__, string m=__MODULE
         struct LoggedClosure(string f=__FILE__, int l=__LINE__, string m=__MODULE__, string foo=__FUNCTION__,  string prettyFoo=__PRETTY_FUNCTION__) {
             //todo prefix/suffix should be customizable when obtaining this closure
             string value(string s)(){
-                Dev!(f, l, m, foo, prettyFoo).Emit!("mixing in:\n"~indentLines(numberLines(s, l))~"--- END OF MIXIN ---")();
+                Debug!(f, l, m, foo, prettyFoo).Emit!("mixing in:\n"~indentLines(numberLines(s, l))~"--- END OF MIXIN ---")();
                 return s;
             }
         }

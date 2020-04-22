@@ -27,21 +27,22 @@ string scanModule(string name, alias aggregateConsumer)(){
     return builder.result;
 }
 
-string scanIndexModule(string index, alias aggregateConsumer, alias bundleConsumer)(){
+string scanIndexModule(string index, alias scannable, alias aggregateConsumer, alias bundleConsumer)(){
     StringBuilder builder;
     mixin("static import "~index~";");
     mixin("alias mod_ = "~index~";");
-    
+    pragma(msg, __LINE__, ":", __FILE__, " ", index, " ", mod_.Index.hasBundle);
+    static if (mod_.Index.hasBundle){
+        builder.append(bundleConsumer!(mod_.Index.bundleModule));
+    }
     static if (mod_.Index.importablePackage)
         builder.append(scanModule!(mod_.Index.packageName, aggregateConsumer)());
     static foreach (string submodule; EnumMembers!(mod_.Index.submodules)){
         builder.append(scanModule!(submodule, aggregateConsumer)());
     }
     static foreach (string subpackage; EnumMembers!(mod_.Index.subpackages)){
-        builder.append(prepareScan!(subpackage, NoOp, NoOp, aggregateConsumer, qualifier, testQualifier)()); //todo qualifiers
-    }
-    static if (mod_.Index.hasBundle){
-        builder.append(bundleConsumer!(mod_.Index.packageName~"."~mod_.Index.bundleModule)());
+        pragma(msg, __FILE__, ":", __LINE__, " prepareScan(", scannable, ".with_(", subpackage, ") =>  ", scannable.withRoot(subpackage), ", ...)");
+        builder.append(prepareScan!([scannable.withRoot(subpackage)], "", aggregateConsumer, bundleConsumer, "")()); //todo qualifiers
     }
     return builder.result;
 }
@@ -55,14 +56,15 @@ bool isGluedImplModule(string name)
 }
 
 string prepareScan(alias roots, string setup, alias aggregateConsumer, alias bundleConsumer, string teardown)(){
+    pragma(msg, __FILE__, ":", __LINE__, " prepareScan(", roots, ", ", setup, ", ...)");
     StringBuilder builder;
     builder.append(setup);
     static foreach (alias scannable; roots) {
         
         static assert(is(typeof(scannable) == Scannable)); //todo could be smartly expressed with conditional method 
-        builder.append(scanIndexModule!(scannable.root~"."~scannable.prefix~"_index", aggregateConsumer, bundleConsumer)());
+        builder.append(scanIndexModule!(scannable.root~"."~scannable.prefix~"_index", scannable, aggregateConsumer, bundleConsumer)());
         version(unittest){
-            builder.append(scanIndexModule!(scannable.root~"."~scannable.testPrefix~"_index", aggregateConsumer, bundleConsumer)());
+            builder.append(scanIndexModule!(scannable.root~"."~scannable.testPrefix~"_index", scannable, aggregateConsumer, bundleConsumer)());
         }
     }
     builder.append(teardown);
@@ -70,6 +72,8 @@ string prepareScan(alias roots, string setup, alias aggregateConsumer, alias bun
 }
 
 string NoOp(T...)(){return "";}
+
+enum NoOp(T...) = "";
 
 Scannable[] listScannables(Scannable s) {
     return [s];

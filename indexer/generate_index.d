@@ -153,7 +153,7 @@ void generateIndex(SourceSet sourceSet, SourceSet main, DirEntry d, bool hasBund
     pkgFile.writeln("    enum importablePackage = "~to!string(packageFileExists)~";");
     pkgFile.writeln("    enum hasBundle = "~to!string(hasBundle)~";");
     if (hasBundle){
-        pkgFile.writeln("    enum bundleModule = \""~sourceSet.prefix ~ "_bundle\";");
+        pkgFile.writeln("    enum bundleModule = \""~packageName~"."~sourceSet.prefix ~ "_bundle\";");
     } else {
         pkgFile.writeln("    enum bundleModule;");
     }

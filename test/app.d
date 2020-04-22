@@ -1,4 +1,4 @@
-module glued.app;
+module app;
 
 void main(string[] args){
 
