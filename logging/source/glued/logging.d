@@ -7,6 +7,7 @@ import std.algorithm: maxElement, min, startsWith;
 import optional;
 import properd;
 
+//todo this module could really use splitting down to package
 
 enum ___Module___;
 
@@ -164,7 +165,6 @@ struct StaticSink {
     static bool shouldShow(LogEvent e){
         //todo would checking eventLocation make more sense? maybe per-type filtering as well?
         //we can safely call front() without worrying about empty optional, because root always have a default
-        pragma(msg, getBuildLogProperd());
         return getBuildLogProperd().get(e.loggerLocation.moduleName).front() <= e.level;
     }
 
@@ -265,24 +265,6 @@ string normalize(string p){
     return normalized.join(".");
 }
 
-unittest {
-    //todo move to other source set, test extensively
-    static assert(mergeBrokenSegments(["a", "b", "c"]) == ["a", "b", "c"]);
-    static assert(mergeBrokenSegments(["a", "b!(c", "d)", "e"]) == ["a", "b!(c.d)", "e"]);
-    static assert(mergeBrokenSegments(["b!(c", "d)", "e"]) == ["b!(c.d)", "e"]);
-    static assert(mergeBrokenSegments(["a", "b!(c", "d)"]) == ["a", "b!(c.d)"]);
-    static assert(mergeBrokenSegments(["a", "b!(c", "d", "e)"]) == ["a", "b!(c.d.e)"]);
-    
-    static assert(normalizeSegments(["a", "b", "c"]) == ["a", "b", "c"]);
-    static assert(normalizeSegments(["a!(x)", "a", "b", "c"]) == ["a!(x)", "b", "c"]);
-    static assert(normalizeSegments(["a", "b!(x)", "b", "c"]) == ["a", "b!(x)", "c"]);
-    static assert(normalizeSegments(["a", "b", "c!(x)", "c"]) == ["a", "b", "c!(x)"]);
-    static assert(normalizeSegments(["a", "b", "c", "c!(x)"]) == ["a", "b", "c", "c!(x)"]);
-    static assert(normalizeSegments(["a", "b", "c!(x)", "cd"]) == ["a", "b", "c!(x)", "cd"]);
-    static assert(normalizeSegments(["a!(x)", "b!(x)", "b", "c"]) == ["a!(x)", "b!(x)", "c"]);
-    static assert(normalizeSegments(["a!(x)", "a", "b!(x)", "b", "c"]) == ["a!(x)", "b!(x)", "c"]);
-}
-
 //todo params fromRight/fromLeft and maxLength
 string[] shortenSegments(string[] segs){
     import std.string;
@@ -359,13 +341,6 @@ string shortenLastSegmentTemplating(string p){
     return shortened.join(".");
 }
 
-unittest {
-    //todo these can be static
-    assert(shortenSegments(["abc", "def", "Ghi"]) == ["a", "d", "Ghi"]);
-    assert(shortenSegments(["abc", "d!(ef)", "Ghi"]) == ["a", "d!(e)", "Ghi"]);
-    assert(shortenSegments(["abc", "d!([ef])", "Ghi"]) == ["a", "d!([e...])", "Ghi"]);
-    assert(shortenSegments(["abc", "def", "G!hi"]) == ["a", "d", "G!hi"]);
-}
 
 string collapse(string p, int maxLength){
     if (p.length <= maxLength){
@@ -412,12 +387,6 @@ string collapse(string p, int maxLength){
     return result();
 }
 
-unittest {
-    assert(collapse("abc.def.ghi.jkl", 10) == "(...).jkl");
-    assert(collapse("abc.def.ghi.jkl", 13) == "abc.(...).jkl");
-    assert(collapse("abc.def.ghi.jkl", 15) == "abc.def.ghi.jkl");
-    assert(collapse("abc.defgh!([e...]).Ghi", 15) == "abc.(...).Ghi");
-}
 
 struct CodeLocation {
     string filename;
@@ -640,64 +609,3 @@ mixin template CreateLogger(string f=__FILE__, int l=__LINE__, string m=__MODULE
     }
 }
 
-version(unittest){
-    mixin CreateLogger!();
-    
-    class C {
-        mixin CreateLogger!();
-
-        static auto log = Logger(new StdoutSink);
-        
-        mixin(Logger.logged.value!("enum CInnerEnum;"));
-        
-        static void foo(string bastard="you"){
-            mixin CreateLogger!();
-            Logger.Info.Emit!"HEY";
-            log.info.emit("hey "~bastard);
-        }
-        
-        void bar(string a){
-            mixin CreateLogger!();
-            
-            Logger.Info.Emit!"HO";
-        }
-    }
-    
-    interface I {
-        mixin CreateLogger!();
-    }
-    
-    void baz(){
-        mixin CreateLogger!();
-        auto log = Logger(new StdoutSink);
-        log.Debug.Emit!"VAZ";
-    }
-    
-    void testFoo(){
-        LogSink logSink = new StdoutSink;
-        mixin CreateLogger!();
-        Logger.Info.Emit!"XYZ";
-        Logger(new StdoutSink).info().emit("123");
-    }
-}
-
-//todo tests to dedicated dir
-//todo it all works on StdoutSink and default static sink; test it on some event collector, analyze events post mortem
-unittest {
-    Logger.Info.Emit!("A1 ", "A2 ", "A3 ", "A4");
-    Logger.Info.Emit!("Foo ")();
-    Logger(new StdoutSink).info().emit("howdy");
-    C.Logger.Debug.Emit!"Something";
-    C.foo();
-    C.log.debug_.emit("hey");
-}
-unittest {
-    new C().bar("");
-    C.foo("world");
-    I.Logger.Info.Emit!"XXX";
-    baz();
-}
-
-unittest{
-    testFoo();
-}
