@@ -10,6 +10,7 @@ import glued.logging;
 
 import glued.context.typeindex: InheritanceIndex;
 import glued.context.processors;
+import glued.context.bundles;
 
 import dejector;
 
@@ -27,10 +28,11 @@ class GluedContext(Processors...) {
 
     this(LogSink logSink){
         this.log = Logger(logSink);
-        internals = GluedInternals(new Dejector(), logSink, new InheritanceIndex(logSink));
+        internals = GluedInternals(new Dejector(), logSink, new InheritanceIndex(logSink), new BundleRegistrar());
         internals.injector.bind!(Dejector)(new InstanceProvider(internals.injector));
         internals.injector.bind!(InheritanceIndex)(new InstanceProvider(internals.inheritanceIndex));
         internals.injector.bind!(LogSink)(new InstanceProvider(cast(Object) logSink));
+        internals.injector.bind!(BundleRegistrar)(new InstanceProvider(cast(Object) internals.bundleRegistrar));
     }
 
     private void before(){
@@ -45,7 +47,8 @@ class GluedContext(Processors...) {
 
     void scan(alias scannables)(){
         enum scanConsumer(string m, string n) = "track!(\""~m~"\", \""~n~"\")();";
-        mixin unrollLoopThrough!(scannables, "void doScan() { ", scanConsumer, "}");
+        enum bundleConsumer(string modName) = "trackBundle!(\""~modName~"\")();";
+        mixin unrollLoopThrough!(scannables, "void doScan() { ", scanConsumer, bundleConsumer, "}");
 
         log.info.emit("Before ", scannables);
         before();
@@ -80,6 +83,10 @@ class GluedContext(Processors...) {
         }
     }
 
+    void trackBundle(string modName)(){
+        log.info.emit("Tracking glue-d bundle for module "~modName);
+        internals.bundleRegistrar.register!(modName)();
+    }
 
     private static bool qualifiesForTracking(alias T)(){
         return hasAnnotation!(T, Tracked);

@@ -2,6 +2,8 @@ module glued.testsuites.scan._test_index;
 struct Index {
     enum packageName = "glued.testsuites.scan";
     enum importablePackage = false;
+    enum hasBundle = false;
+    enum bundleModule;
 
     enum submodules {
         glued_testsuites_scan_common = "glued.testsuites.scan.common",

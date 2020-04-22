@@ -8,4 +8,4 @@ import std.traits;
 
 import glued.testsuites.scan.common;
 
-mixin unrollLoopThrough!(at("ex1"), GatherPairsSetup!("gatherPairs"), GatherPairsConsumer, GatherPairsTeardown);
+mixin unrollLoopThrough!(at("ex1"), GatherPairsSetup!("gatherPairs"), GatherPairsConsumer, NoOp, GatherPairsTeardown);

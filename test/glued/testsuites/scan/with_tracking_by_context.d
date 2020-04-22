@@ -14,7 +14,7 @@ enum TrackByBackboneSetup = "void track(BackboneContext context) { import glued.
 enum TrackByBackboneConsumer(string m, string n) = "context.track!(\""~m~"\", \""~n~"\")();";
 enum TrackByBackboneTeardown = "}";
     
-mixin unrollLoopThrough!([at("ex1")], TrackByBackboneSetup, TrackByBackboneConsumer, TrackByBackboneTeardown);
+mixin unrollLoopThrough!([at("ex1")], TrackByBackboneSetup, TrackByBackboneConsumer, NoOp, TrackByBackboneTeardown);
 
 unittest {
     //this tests scanning method in the same module as usage

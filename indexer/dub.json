@@ -17,5 +17,6 @@
 	"copyright": "Copyright © 2020, Filip Malczak",
 	"description": "autoscanning implementation",
 	"license": "Apache 2.0",
-	"name": "indexer"
+	"name": "indexer",
+	"todo": [ "rename to 'applicator'; same with source file" ]
 }

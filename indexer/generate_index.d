@@ -1,4 +1,6 @@
 import std.stdio;
+import std.algorithm;
+import std.array;
 import std.file;
 import std.path;
 import std.conv;
@@ -18,9 +20,9 @@ string toEnumName(string moduleName){
 
 }
 
-bool isIndexFile(string path)
+bool isIgnoredFile(string path)
 {
-    return path.startsWith("_") && path.endsWith("_index.d");
+    return path.startsWith("_");
 }
 
 bool isPackageFile(string path)
@@ -31,7 +33,7 @@ bool isPackageFile(string path)
 bool isIndexableFile(DirEntry d)
 {
     return d.isFile && d.name.extension == ".d" && 
-        !isIndexFile(d.name.baseName()) && 
+        !isIgnoredFile(d.name.baseName()) && 
         !isPackageFile(d.name.baseName());
 }
 
@@ -138,8 +140,97 @@ string rebase(string path, string root, string newRoot)
 //    return chainPath(newRoot, relativePath(absolutePath(path), absolutePath(root)));
 }
 
-void generateIndex(SourceSet[] sourceSets=[SourceSet("source", "", true, false), SourceSet("test", "test", false, true)]){
-        SourceSet main;
+void generateIndex(SourceSet sourceSet, SourceSet main, DirEntry d, bool hasBundle){
+    auto indexName = sourceSet.prefix ~ "_index";
+    auto pkgFilePath = chainPath(d.name, indexName~".d");
+    writeln(__FILE__, ":", __LINE__, " ", "Generating ", pkgFilePath);
+    auto pkgFile = File(pkgFilePath,"w");
+    auto packageName = toModuleName(sourceSet.path, d.name);
+    pkgFile.writeln("module "~packageName~"."~indexName~";");
+    pkgFile.writeln("struct Index {");
+    pkgFile.writeln("    enum packageName = \""~packageName~"\";");
+    bool packageFileExists = chainPath(d.name, "package.d").exists;
+    pkgFile.writeln("    enum importablePackage = "~to!string(packageFileExists)~";");
+    pkgFile.writeln("    enum hasBundle = "~to!string(hasBundle)~";");
+    if (hasBundle){
+        pkgFile.writeln("    enum bundleModule = \""~sourceSet.prefix ~ "_bundle\";");
+    } else {
+        pkgFile.writeln("    enum bundleModule;");
+    }
+    pkgFile.writeln();
+    writeSubmodules(pkgFile, sourceSet.path, d.name);
+    pkgFile.writeln();
+    writeSubpackages(pkgFile, sourceSet.path, d.name);
+    
+    pkgFile.writeln();
+
+    pkgFile.writeln("}");
+    if (sourceSet.upgenerate) 
+    {
+        indexName = main.prefix~"_index";
+        auto mainIndex = chainPath(rebase(d.name, sourceSet.path, main.path), indexName~".d");
+        if (!mainIndex.exists)
+        {   
+            auto upgeneratedIndex = chainPath(d.name, indexName~".d");
+            writeln(__FILE__, ":", __LINE__, " ", "Upgenerating ", upgeneratedIndex);
+            auto upgeneratedFile = File(upgeneratedIndex, "w");
+            upgeneratedFile.writeln("module "~packageName~"."~indexName~";");
+            upgeneratedFile.writeln();
+            upgeneratedFile.writeln("struct Index {");
+            upgeneratedFile.writeln("    enum packageName = \""~packageName~"\";");
+            packageFileExists = chainPath(d.name, "package.d").exists;
+            upgeneratedFile.writeln("    enum importablePackage = "~to!string(packageFileExists)~";");
+            upgeneratedFile.writeln("    enum hasBundle = false;");
+            upgeneratedFile.writeln("    enum bundleModule;");
+            upgeneratedFile.writeln();
+            upgeneratedFile.writeln("    enum submodules;");
+            upgeneratedFile.writeln();
+            upgeneratedFile.writeln("    enum subpackages;");
+            upgeneratedFile.writeln();
+            upgeneratedFile.writeln("}");
+        }
+    }
+}
+
+//returns whether any files were bundled in this directory
+bool generateBundle(SourceSet sourceSet, DirEntry d){
+    auto descriptorPath = chainPath(d.name, ".bundle");
+    if (descriptorPath.exists){
+        auto descriptorFile = File(descriptorPath, "r");
+        auto toBundle = descriptorFile.byLine.array;
+        writeln(__FILE__, ":", __LINE__, " ", "toBundle: ", toBundle);
+        if (toBundle.empty) {
+            writeln(__FILE__, ":", __LINE__, " ", "Empty bundle");
+            return false;
+        }
+        auto bundleName = sourceSet.prefix ~ "_bundle";
+        auto bundlePath = chainPath(d.name, bundleName~".d");
+        writeln(__FILE__, ":", __LINE__, " ", "Generating ", bundlePath);
+        auto bundleFile = File(bundlePath,"w");
+        auto packageName = toModuleName(sourceSet.path, d.name);
+        bundleFile.writeln("module "~packageName~"."~bundleName~";");
+        bundleFile.writeln();
+        bundleFile.writeln("struct BundleDefinition {");
+        bundleFile.writeln("    enum bundledFiles = loadBundle();");
+        bundleFile.writeln();
+        bundleFile.writeln("    private static string[string] loadBundle(){ ");
+        bundleFile.writeln("        string[string] result;");
+        foreach (f; toBundle){
+            bundleFile.writeln("        result[\""~f~"\"] = import(\""~to!string(chainPath(d.name, f))~"\");");
+        }
+        bundleFile.writeln("        return result;");
+        bundleFile.writeln("    }");
+        bundleFile.writeln();
+
+        bundleFile.writeln("}");
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void processSourceSets(SourceSet[] sourceSets=[SourceSet("source", "", true, false), SourceSet("test", "test", false, true)]){
+    SourceSet main;
     foreach (SourceSet p; sourceSets)
     {
         if (p.isMain) 
@@ -148,60 +239,22 @@ void generateIndex(SourceSet[] sourceSets=[SourceSet("source", "", true, false),
             break;
         }
     }
-    writeln("Source sets: ", sourceSets);
-    writeln("Main:        ", main);
+    writeln(__FILE__, ":", __LINE__, " ", "Source sets: ", sourceSets);
+    writeln(__FILE__, ":", __LINE__, " ", "Main:        ", main);
     foreach (SourceSet sourceSet; sourceSets)
     {
         foreach (DirEntry d; dirEntries(sourceSet.path, SpanMode.breadth))
         {
             if (d.isDir) 
             {
-                auto indexName = sourceSet.prefix ~ "_index";
-                auto pkgFilePath = chainPath(d.name, indexName~".d");
-                writeln("Generating ", pkgFilePath);
-                auto pkgFile = File(pkgFilePath,"w");
-                auto packageName = toModuleName(sourceSet.path, d.name);
-                pkgFile.writeln("module "~packageName~"."~indexName~";");
-                pkgFile.writeln("struct Index {");
-                pkgFile.writeln("    enum packageName = \""~packageName~"\";");
-                bool packageFileExists = chainPath(d.name, "package.d").exists;
-                pkgFile.writeln("    enum importablePackage = "~to!string(packageFileExists)~";");
-                pkgFile.writeln();
-                writeSubmodules(pkgFile, sourceSet.path, d.name);
-                pkgFile.writeln();
-                writeSubpackages(pkgFile, sourceSet.path, d.name);
-                
-                pkgFile.writeln();
-
-                pkgFile.writeln("}");
-                if (sourceSet.upgenerate) 
-                {
-                    indexName = main.prefix~"_index";
-                    auto mainIndex = chainPath(rebase(d.name, sourceSet.path, main.path), indexName~".d");
-                    if (!mainIndex.exists)
-                    {   
-                        auto upgeneratedIndex = chainPath(d.name, indexName~".d");
-                        writeln("Upgenerating ", upgeneratedIndex);
-                        auto upgeneratedFile = File(upgeneratedIndex, "w");
-                        upgeneratedFile.writeln("module "~packageName~"."~indexName~";");
-                        upgeneratedFile.writeln();
-                        upgeneratedFile.writeln("struct Index {");
-                        upgeneratedFile.writeln("    enum packageName = \""~packageName~"\";");
-                        packageFileExists = chainPath(d.name, "package.d").exists;
-                        upgeneratedFile.writeln("    enum importablePackage = "~to!string(packageFileExists)~";");
-                        upgeneratedFile.writeln();
-                        upgeneratedFile.writeln("    enum submodules;");
-                        upgeneratedFile.writeln();
-                        upgeneratedFile.writeln("    enum subpackages;");
-                        upgeneratedFile.writeln();
-                        upgeneratedFile.writeln("}");
-                    }
-                }
+                auto hasBundle = generateBundle(sourceSet, d);
+                generateIndex(sourceSet, main, d, hasBundle);
             }
         }
     }
 }
 
+//todo its not generate_index but rather preprocess_codebase or smth
 version(executable) {
     /**
      * Params (in order):
@@ -211,7 +264,7 @@ version(executable) {
     void main(string[] args){
         assert(args.length > 1);
         SourceSet[] sourceSets = parseSourceSets(args[1..$]);
-        generateIndex(sourceSets);
+        processSourceSets(sourceSets);
     }
 
 }
