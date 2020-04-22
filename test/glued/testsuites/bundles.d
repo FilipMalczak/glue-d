@@ -1,5 +1,7 @@
 module glued.testsuites.bundles;
 
+import std.algorithm;
+
 import glued.scan;
 import glued.scannable;
 
@@ -9,6 +11,6 @@ unittest {
     mixin unrollLoopThrough!([Scannable("bundles")], "void doScan() { ", NoOp, perBundle, "}");
     
     doScan();
-    
-    assert(collected == ["bundles.content.onlysubpkgs._test_bundle", "bundles.content.onlysubpkgs.onlysubmods._test_bundle", "bundles.content.onlysubpkgs.mixed._test_bundle", "bundles.content.onlysubpkgs.mixed.empty._test_bundle"]);
+    sort(collected);
+    assert(collected == ["bundles.content.onlysubpkgs._test_bundle", "bundles.content.onlysubpkgs.mixed._test_bundle", "bundles.content.onlysubpkgs.mixed.empty._test_bundle", "bundles.content.onlysubpkgs.onlysubmods._test_bundle"]);
 }
