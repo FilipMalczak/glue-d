@@ -1,9 +1,12 @@
 module glued.logging;
 
-
 import std.conv: to, text;
 import std.traits: EnumMembers;
-import std.algorithm: maxElement, min;
+import std.algorithm: maxElement, min, startsWith;
+
+import optional;
+import properd;
+
 
 enum ___Module___;
 
@@ -16,6 +19,15 @@ enum Level {
     WARN,
     ERROR,
     NONE
+}
+
+Level toLevel(string s){
+    foreach (v; EnumMembers!Level){
+        if (v.to!string == s){
+            return v;
+        }
+    }
+    throw new Exception("No level named "~s);
 }
 
 immutable maxLevelNameLength = (cast(Level[]) [ EnumMembers!Level ]).maxElement!"to!string(a).length".to!string.length;
@@ -71,17 +83,95 @@ string format(LogEvent e){
      to!string(e.message);
 }
 
-struct DefaultStaticSink {
+struct StaticSink {
     import std.array;
     import std.conv;
+    
+    private static string getBuildLogConfig(){
+        static if (__traits(compiles, import("buildLog.conf")) && !import("buildLog.conf").empty){
+            return import("buildLog.conf");
+        } else {
+            version(silent_build){
+                return "log.level=NONE";
+            } else {
+                pragma(msg, "Build log configuration (./buildLog.conf) is missing or is empty!");
+                return "";
+            }
+        }
+    }
+    
+    //todo this can be useful for runtime logging as well
+    private struct PackageLogEntry {
+        string fullModuleName;
+        PackageLogEntry[string] subModules;
+        Optional!Level explicitDefinition = no!Level;
+        
+        void put(string modName, Level lvl){
+            put(modName.split("."), lvl);
+        }
+        
+        void put(string[] modName, Level lvl){
+            if (modName.empty){
+                explicitDefinition = lvl;
+            } else {
+                if (!(modName[0] in subModules)){
+                    string subName = (this.fullModuleName.empty ? "" : this.fullModuleName~".")~modName[0];
+                    subModules[modName[0]] = PackageLogEntry(subName);
+                }
+                subModules[modName[0]].put(modName[1..$], lvl);
+            }
+        }
+        
+        Optional!Level get(string modName){
+            return get(modName.split("."));
+        }
+    
+        Optional!Level get(string[] modName){
+            if (modName.empty){
+                return explicitDefinition;
+            }
+            auto deeperResult = modName[0] in subModules ? subModules[modName[0]].get(modName[1..$]) : no!Level;
+            if (deeperResult.empty){
+                return explicitDefinition;
+            }
+            return deeperResult;
+        }
+    }
+    
+    private static PackageLogEntry getBuildLogProperd(){
+        PackageLogEntry[string] x;
+        PackageLogEntry root = PackageLogEntry("", x, no!Level);
+        auto props = parseProperties(getBuildLogConfig());
+        foreach (k; props.keys()){
+            auto name = k;
+            if (name.startsWith("log.level")) {
+                name = name["log.level".length..$];
+                if (name.startsWith("."))
+                    name = name[1..$];
+                root.put(name, props[k].toLevel);
+            }
+        }
+        if (root.explicitDefinition.empty)
+            root.explicitDefinition = Level.INFO.some;
+        return root;
+    }
 
-    static string consumer(alias e)(){ // LogEvent e
-        string versionToEnable = "debug_"~(e.loggerLocation.moduleName.replace(".", "_"));
-        return "version("~versionToEnable~"){ pragma(msg, format(e)); }";
+    private static string formatLogEvent(LogEvent e){
+        //todo add format specified in build log config
+        return format(e);
+    }
+    
+    static bool shouldShow(LogEvent e){
+        //todo would checking eventLocation make more sense? maybe per-type filtering as well?
+        //we can safely call front() without worrying about empty optional, because root always have a default
+        pragma(msg, getBuildLogProperd());
+        return getBuildLogProperd().get(e.loggerLocation.moduleName).front() <= e.level;
     }
 
     static void consume(LogEvent e)(){
-        mixin(consumer!(e)());
+        static if (shouldShow(e)){
+            pragma(msg, formatLogEvent(e));
+        }
     }
 }
 
@@ -93,18 +183,14 @@ class StdoutSink: LogSink {
     import std.stdio;
         
     override void consume(LogEvent e){
-        //todo if dev is used, be angry? I mean, that method shouldn't be used in the final commit
-        stdout.writeln(format(e));
-        stdout.flush();
+        //todo if dev.emit is used, be angry? I mean, that method shouldn't be used in the final commit
+        //todo this is a quickfix for log filtering; use this to implement bundles, then use bundles to load runtime config in... well, runtime
+        if (StaticSink.shouldShow(e)){
+            stdout.writeln(format(e));
+            stdout.flush();
+        }
     }
 }
-
-struct LoggerConfig(_StaticLogSink){
-    alias StaticLogSink = _StaticLogSink;
-    bool figureOutEventAggregate=true;
-}
-
-enum DefaultConfig = LoggerConfig!(DefaultStaticSink)();
 
 /**
  * if p="a.b!(c.d).e", then segments = ["a", "b!(c", "d)", "e"]
@@ -367,7 +453,7 @@ struct LogEvent {
     Optional!Tid tid;
 }
 
-mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l=__LINE__, string m=__MODULE__, string foo=__FUNCTION__,  string prettyFoo=__PRETTY_FUNCTION__){
+mixin template CreateLogger(string f=__FILE__, int l=__LINE__, string m=__MODULE__, string foo=__FUNCTION__,  string prettyFoo=__PRETTY_FUNCTION__){
     static if (__traits(compiles, typeof(this))){
         alias Here = typeof(this);
     } else {
@@ -406,7 +492,7 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
         }
         
         static LogEvent event(Level level, string message, CodeLocation eventLocation, bool figureOutEventAggregate=true){
-            if (figureOutEventAggregate) {
+            if (figureOutEventAggregate) { //todo you removed config, it was there; what to do with this?
                 
                 if (location.moduleName == eventLocation.moduleName && 
                     location.aggregateName.length > 0 && eventLocation.functionName.length > 0 && 
@@ -423,7 +509,8 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
         
         struct LogClosure(string f=__FILE__, int l=__LINE__, string m=__MODULE__, string foo=__FUNCTION__,  string prettyFoo=__PRETTY_FUNCTION__) {
             void Emit(Level level, T...)(){
-                config.StaticLogSink.consume!(event(level, txt!T, CodeLocation(f, l, m, "", foo, prettyFoo), config.figureOutEventAggregate))();
+                //todo figureOutEventAggregate was here
+                StaticSink.consume!(event(level, txt!T, CodeLocation(f, l, m, "", foo, prettyFoo)))();
             }
         }
         
@@ -449,7 +536,8 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
         
             void emit(T...)(Level level, T t){
                 import std.conv;
-                auto e = event(level, text!(T)(t), CodeLocation(f, l, m, "", foo, prettyFoo), config.figureOutEventAggregate);
+                //fixme figureOutEventAggregate was here
+                auto e = event(level, text!(T)(t), CodeLocation(f, l, m, "", foo, prettyFoo));
                 logSink.consume(e);
             }
         }
@@ -550,10 +638,6 @@ mixin template CreateLogger(alias config=DefaultConfig, string f=__FILE__, int l
             return LoggedClosure!(f, l, m, foo, prettyFoo)();
         }
     }
-}
-
-version(unittest){
-    version = debug_glued_logging;
 }
 
 version(unittest){

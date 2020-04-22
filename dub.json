@@ -48,5 +48,6 @@
         "./logging/",
         "./annotations/"
     ],
-    "targetType": "library"
+    "targetType": "library",
+    "dflags": ["-J=."]
 }
