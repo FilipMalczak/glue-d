@@ -39,7 +39,9 @@ template toAnnotableType(alias T){
 
 enum isType(T) = (__traits(isTemplate, T) || is(T == class) || is(T == interface) || is(T == struct) || is(T == enum));
 
-enum isRangeOf(R, T) = isInputRange!T && is(ReturnType!((R r) => r.front()): T);
+template isRangeOf(R, T) {
+    enum isRangeOf = isInputRange!R && is(ReturnType!((R r) => r.front()) == T);
+}
 
 //todo remove these from dejector, make dependency on utils and logging from there
 enum isObjectType(T) = is(T == interface) || is(T == class);

@@ -3,3 +3,9 @@ language: d
 install:
     - "./clean.sh"
     - "dub run --config=indexer --compiler=${DC}"
+
+script:
+    - "dub test glue-d:annotations --compiler=${DC}"
+    - "dub test glue-d:logging --compiler=${DC}"
+    - "dub test glue-d:utils --compiler=${DC}"
+    - "dub test --compiler=${DC}"

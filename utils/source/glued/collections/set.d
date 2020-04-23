@@ -1,11 +1,9 @@
 module glued.collections.set;
 
 import std.range;
+import std.traits;
 
-//todo WTF
-//import glued.utils: isRangeOf;
-enum isRangeOf(R, T) = isInputRange!T && is(ReturnType!((R r) => r.front()): T);
-
+import glued.utils: isRangeOf;
 
 struct Set(T) {
     import std.algorithm;
@@ -30,17 +28,15 @@ struct Set(T) {
     }
     
     void add(T[] elem...){
-        if (!backend.canFind(elem))
-            backend ~= (elem);
-        backend.sort;
+        auto sum = (backend ~ elem);
+        sum.sort;
+        backend = sum.uniq.array;
     }
     
     void add(V)(V values) if (isRangeOf!(V, T)|| is(V == T[])){
-        foreach (v; values){
-            if (!backend.canFind(v))
-                backend ~= (v);
-        }
-        backend.sort;
+        auto sum = (backend ~ elem);
+        sum.sort;
+        backend = sum.uniq.array;
     }
     
     bool contains(T lookedUp){
@@ -86,10 +82,11 @@ struct Set(T) {
         T[] common;
         auto smaller = length < another.length ? this : another;
         auto theOther = length < another.length ? another : this;
-        foreach (v; smaller)
+        foreach (v; smaller){
             if (theOther.canFind(v)){
                 common ~= v;
             }
+        }
         return typeof(this)(common);
     }
     
@@ -100,10 +97,16 @@ struct Set(T) {
         add(data);
     }
     
+    //s = [];
+    void opAssign(void[] empty) {
+        backend = [];
+    }
+    
     //S!T s; s[] -> T[]
     T[] opIndex(){
         return toArray();
     }
+
 
     //S!T s; s ~= t;
     void opOpAssign(string op)(T elem) if (op == "~") {
@@ -122,7 +125,7 @@ struct Set(T) {
     
     // s1 & s2 <=> s1.intersection(s2)
     auto opBinary(string op, V)(V another) if (op == "&") {
-        return union_(another);
+        return intersection(another);
     }
     
     // t in s
@@ -187,11 +190,11 @@ unittest {
     assert(s1.empty);
     
     s1 ~= [2, 2, 4];
-    assert(s1 == Set([4, 2]));
+    assert(s1 == Set!int([4, 2]));
     
-    assert(Set([1, 2, 2, 5]).union_(Set([2, 5, 4, 1, 3, 9])) == Set([1, 2, 3, 4, 5, 9]));
-    assert(Set([1, 2, 2, 7]).intersection(Set([2, 5, 4, 1, 3, 9])) == Set([1, 2]));
+    assert(Set!(int)([1, 2, 2, 5]).union_(Set!(int)([2, 5, 4, 1, 3, 9])) == Set!(int)([1, 2, 3, 4, 5, 9]));
+    assert(Set!(int)([1, 2, 2, 7]).intersection(Set!(int)([2, 5, 4, 1, 3, 9])) == Set!(int)([1, 2]));
     
-    assert((Set([1, 2, 2, 5]) | Set([2, 5, 4, 1, 3, 9])) == Set([1, 2, 3, 4, 5, 9]));
-    assert((Set([1, 2, 2, 7]) & Set([2, 5, 4, 1, 3, 9])) == Set([1, 2]));
+    assert((Set!(int)([1, 2, 2, 5]) | Set!(int)([2, 5, 4, 1, 3, 9])) == Set!(int)([1, 2, 3, 4, 5, 9]));
+    assert((Set!(int)([1, 2, 2, 7]) & Set!(int)([2, 5, 4, 1, 3, 9])) == Set!(int)([1, 2]));
 }
