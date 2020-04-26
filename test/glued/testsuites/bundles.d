@@ -8,7 +8,7 @@ import glued.scannable;
 import glued.set;
 
 unittest {
-    //todo: extend this, move to scan/deep_with_bundles
+    //todo: move to scan/deep_with_bundles
     Set!string collected;
     enum perBundle(string s) = "collected.add(\""~s~"\");";
     mixin unrollLoopThrough!([Scannable("bundles")], "void doScan() { ", NoOp, perBundle, "}");

@@ -51,7 +51,7 @@ struct Set(T) {
         return backend.keys()[];
     }
     
-    Set!T2 asSetOf(T2)(){
+    Set!T2 asSetOf(T2)() {//todo if traits: isAssignable(T2, T)
         return Set!T2.of(asRange.map!(x => cast(T2) x));
     }
     
@@ -61,32 +61,4 @@ struct Set(T) {
         result.addAll(data);
         return result;
     }
-    
-//    private static bool subTypeEquals(Super, Sub)(Set!Super superTypeSet, Set!Sub subTypeSet){
-//        Set!Super castedSubTypeSet = Set!Super.of(subTypeSet.asRange.map!(x => cast(Super) x));
-//        return superTypeSet == castedSubTypeSet;
-//    }
-//    
-//    private template isAssignable(SuperCandidate, SubCandidate){
-//        static if (is(SubCandidate: SuperCandidate)){
-//            enum isAssignable = true;
-//        } else
-//        static if (is(SubCandidate == interface) && is (SuperCandidate == Object)){
-//            enum isAssignable = true;
-//        } else
-//        enum isAssignable = false;
-//    }
-//    
-//    bool genericEquals(T2)(Set!T2 other){
-//        static if (isAssignable!(T2, T)) {
-//            return this.asSetOf!T2 == other;
-//        } else {
-//            static if (isAssignable!(T, T2)){
-//                return this == other.asSetOf!T;
-////                return subTypeEquals!(T, T2)(this, other);
-//            } else {
-//                return false;
-//            }
-//        }
-//    }
 }
