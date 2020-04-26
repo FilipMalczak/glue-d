@@ -1,6 +1,5 @@
 module glued.testsuites.scan.common;
 
-enum static_(string s) = "static "~s;
-enum GatherPairsSetup(string fooName) = ("Pair[] "~fooName~"() { Pair[] result;");
-enum GatherPairsConsumer(string m, string n) = "result ~= Pair(\""~m~"\", \""~n~"\");";
+enum GatherPairsSetup(string fooName) = ("import glued.set; Set!Pair "~fooName~"() { Set!Pair result;");
+enum GatherPairsConsumer(string m, string n) = "result.add(Pair(\""~m~"\", \""~n~"\"));";
 enum GatherPairsTeardown = "return result; }";

@@ -5,12 +5,14 @@ import std.algorithm;
 import glued.scan;
 import glued.scannable;
 
+import glued.set;
+
 unittest {
-    string[] collected;
-    enum perBundle(string s) = "collected ~= \""~s~"\";";
+    //todo: extend this, move to scan/deep_with_bundles
+    Set!string collected;
+    enum perBundle(string s) = "collected.add(\""~s~"\");";
     mixin unrollLoopThrough!([Scannable("bundles")], "void doScan() { ", NoOp, perBundle, "}");
     
     doScan();
-    sort(collected);
-    assert(collected == ["bundles.content.onlysubpkgs._test_bundle", "bundles.content.onlysubpkgs.mixed._test_bundle", "bundles.content.onlysubpkgs.mixed.empty._test_bundle", "bundles.content.onlysubpkgs.onlysubmods._test_bundle"]);
+    assert(collected == Set!string.of(["bundles.content.onlysubpkgs._test_bundle", "bundles.content.onlysubpkgs.mixed._test_bundle", "bundles.content.onlysubpkgs.mixed.empty._test_bundle", "bundles.content.onlysubpkgs.onlysubmods._test_bundle"]));
 }

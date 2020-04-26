@@ -6,5 +6,5 @@ import glued.stereotypes;
 
 enum E;
 
-enum NonTrackedBecauseEnum;
+enum NonTrackedBecauseEnumInOtherModule;
 

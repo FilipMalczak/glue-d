@@ -31,7 +31,6 @@ string scanIndexModule(string index, alias scannable, alias aggregateConsumer, a
     StringBuilder builder;
     mixin("static import "~index~";");
     mixin("alias mod_ = "~index~";");
-    pragma(msg, __LINE__, ":", __FILE__, " ", index, " ", mod_.Index.hasBundle);
     static if (mod_.Index.hasBundle){
         builder.append(bundleConsumer!(mod_.Index.bundleModule));
     }
@@ -41,7 +40,6 @@ string scanIndexModule(string index, alias scannable, alias aggregateConsumer, a
         builder.append(scanModule!(submodule, aggregateConsumer)());
     }
     static foreach (string subpackage; EnumMembers!(mod_.Index.subpackages)){
-        pragma(msg, __FILE__, ":", __LINE__, " prepareScan(", scannable, ".with_(", subpackage, ") =>  ", scannable.withRoot(subpackage), ", ...)");
         builder.append(prepareScan!([scannable.withRoot(subpackage)], "", aggregateConsumer, bundleConsumer, "")()); //todo qualifiers
     }
     return builder.result;
@@ -56,7 +54,6 @@ bool isGluedImplModule(string name)
 }
 
 string prepareScan(alias roots, string setup, alias aggregateConsumer, alias bundleConsumer, string teardown)(){
-    pragma(msg, __FILE__, ":", __LINE__, " prepareScan(", roots, ", ", setup, ", ...)");
     StringBuilder builder;
     builder.append(setup);
     static foreach (alias scannable; roots) {

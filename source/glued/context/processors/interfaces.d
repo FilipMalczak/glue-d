@@ -7,7 +7,7 @@ import std.traits;
 import glued.stereotypes;
 import glued.logging;
 import glued.utils;
-import glued.collections;
+import glued.set;
 
 import glued.context.typeindex: InheritanceIndex, TypeKind;
 import glued.context.processors.internals;

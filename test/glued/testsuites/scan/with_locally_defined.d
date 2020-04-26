@@ -6,6 +6,7 @@ import std.algorithm.searching;
 
 import glued.scan;
 import glued.mirror;
+import glued.set;
 import glued.testutils;
 
 import glued.testsuites.scan.common;
@@ -13,7 +14,6 @@ import glued.testsuites.scan.common;
 mixin unrollLoopThrough!([at("ex2.sub1"), at("ex2.sub2")], GatherPairsSetup!"gatherPairs", GatherPairsConsumer, NoOp, GatherPairsTeardown);
 
 unittest {
-    Pair[] found = gatherPairs();
-    assert(found.count(Pair("ex2.sub1.m1", "C")));
-    assert(found.count(Pair("ex2.sub2.m2", "I")));
+    auto found = gatherPairs();
+    assert(found == Set!Pair.of([Pair("ex2.sub1.m1", "C"), Pair("ex2.sub2.m2", "I")]));
 }

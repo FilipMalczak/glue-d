@@ -5,6 +5,7 @@ import std.range;
 
 import optional;
 
+//todo rename to Asset
 interface BundledFile {
     @property 
     string scheme();

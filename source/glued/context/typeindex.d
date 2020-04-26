@@ -1,7 +1,11 @@
 module glued.context.typeindex;
 
-import glued.collections;
+import std.array;
+import std.algorithm.iteration;
+
 import glued.logging;
+
+import glued.set;
 
 enum TypeKind { INTERFACE, ABSTRACT_CLASS, CONCRETE_CLASS }
 
@@ -18,7 +22,11 @@ class InheritanceIndex {
 
     override string toString(){
         import std.conv: to;
-        return typeof(this).stringof~"(kinds="~to!string(kinds)~", implementations="~to!string(implementations)~")";
+        string[] pairs;
+        foreach (k; implementations.keys()){
+            pairs ~= "'"~k~"': Set!string("~to!string(implementations[k].asRange.array)~")";
+        }
+        return typeof(this).stringof~"(kinds="~to!string(kinds)~", implementations=["~pairs.join(", ")~"])";
     }
 
     void markExists(string query, TypeKind kind){
@@ -36,37 +44,40 @@ class InheritanceIndex {
         log.debug_.emit(extending, " extends ", extended);
         if (!(extended in implementations))
             implementations[extended] = Set!string();
-        log.debug_.emit(extending, " extends ", extended, " ; ", implementations[extended]);
-        implementations[extended] ~= extending;
+        log.debug_.emit(extending, " extends ", extended, " ; ", implementations[extended].asRange.array);
+        implementations[extended].put(extending);
     }
 
     TypeKind getTypeKind(string typeName){
         return TypeKind.INTERFACE;
     }
 
-    auto getDirectSubtypes(string typeName){
-        if (typeName in implementations)
-            return implementations[typeName];
-        return Set!(string)();
+    Set!string getDirectSubtypes(string typeName){
+        auto result = Set!string();
+        if (typeName in implementations) {
+            result.addAll(implementations[typeName].asRange);
+        }
+        return result;
     }
 
     Set!string getSubtypes(string typeName){
+        auto result = Set!string();
         auto direct = getDirectSubtypes(typeName);
-        return direct ~ (direct.empty? [] : direct.map!(d => getSubtypes(d)).fold!((x, y) => x~y).array);
+        auto indirect = direct.asRange.map!(d => getSubtypes(d).asRange.array).joiner;
+        result.addAll(direct.asRange);
+        result.addAll(indirect);
+        return result;
     }
 
     auto getImplementations(string typeName){
-        return getSubtypes(typeName).filter!(n => kinds[n] == TypeKind.CONCRETE_CLASS);
+        return getSubtypes(typeName).asRange.filter!(n => kinds[n] == TypeKind.CONCRETE_CLASS);
     }
 
     auto getDirectImplementations(string typeName){
-        return getDirectSubtypes(typeName).filter!(n => kinds[n] == TypeKind.CONCRETE_CLASS);
+        return getDirectSubtypes(typeName).asRange.filter!(n => kinds[n] == TypeKind.CONCRETE_CLASS);
     }
 
     auto find(TypeKind kind){
-        import std.range;
-        import std.traits;
-        enum isRangeOf(R, T) = isInputRange!T && is(ReturnType!((R r) => r.front()): T);
         return kinds.keys().filter!(x => kinds[x] == kind);
     }
 
