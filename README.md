@@ -1,26 +1,26 @@
 # glue-d
-
+ 
 > master: [![master status](https://img.shields.io/travis/FilipMalczak/glue-d/master?label=master)](https://travis-ci.org/FilipMalczak/glue-d/branches)
 >
 > dev: [![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?label=dev)](https://travis-ci.org/FilipMalczak/glue-d/branches)
-
+ 
 Bunch of different D-lang tools glued together with some sprinkles on top.
-
+ 
 The point is to implement autoscanning, implement some annotation system (both done)
 then glue together a bunch of other projects: forked dejector for DI, mirror for
 reflection. Together with that this will become full application context, with
 runtime features, like autowiring, inheritance inspection and instantiation, as 
 well as compile-time component scan, stereotyping, auto-implementation of interfaces,
 etc.
-
+ 
 Next integrations will probably include vibe-d and maybe some data drivers.
-
+ 
 Heavily inspired by Spring.
-
+ 
 ## ToDo
-
+ 
 > __bold__ are WIP and highest prio
-
+ 
 * conceptual
   * Java has Beans, what should we call components? something plant-related, 
     "seed" seems alright as "uninitialized component"
@@ -51,18 +51,24 @@ Heavily inspired by Spring.
   * enhance tests
 * new features
   * __annotations enhancements:__
-    * validation (target - written, unchecked; repeatable(0/1/n))
+    * validation (missing method/field/etc, only known Targets are types; 
+      validations here are "has (no) parameter of type/name", "name matches" 
+      with syntax sugar for "name starts/ends with")
     * @InheritAnnotations(target=aggregate/method/field) - if present, look into 
       superclasses and copy annotations from super 
   * __enhanced resolveCall and friends__
     * @Param(i/name, annotations...) - repeatable, used to define param-level annotations
+      * this can be a good moment to introduce more strict @Repeatable, something with
+        semantics "this annotation can be repeated up to once with given argument", 
+        which would be useful to validate that there is single @Param per argument)
     * @Seed on non-config method? (that would probably require either merging 
       dejector to this repo, duplicating resolveCall here or moving seed, 
       the whole annotations module and probably some annotation definitions there)
-  * environment (key-value pairs, value injection)
-  * config utilities (environment required)
+  * environment (string/string key-value pairs)
+    * injection with @Config with support for simple types
+  * value registry (environment required)
     * config inspection
-    * autobinding structs/enums/simple types
+    * autobinding structs/enums/simple types with @Value
   * auto-bound LogSink (config required)
   * enhance dejector to allow for aliases and qualifiers
     * additional dispatch level - resolver (key -> binding)
@@ -74,3 +80,11 @@ Heavily inspired by Spring.
   * vibe-d integration
     * controller stereotype & autobinding
     * repositories?
+  * converters
+    * you have component C1 in context
+    * you have Converter!(C1, C2) in context
+    * you have no C2 in context
+    * Glue-D should figure out in runtime that it can provide C2 by applying 
+      converter to C1 instance
+    * tbd: how to treat such instances when it comes to autobinding and interface
+      resolution? (these are 2 cases, actually)
