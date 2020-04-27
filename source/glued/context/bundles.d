@@ -5,8 +5,10 @@ import std.range;
 
 import optional;
 
-//todo rename to Asset
-interface BundledFile {
+/**
+ * Generalization of the idea of a read-only text file.
+ */
+interface Asset {
     @property 
     string scheme();
     
@@ -30,9 +32,9 @@ interface Bundle {
     
     bool exists(string path);
     
-    Optional!BundledFile find(string path);
+    Optional!Asset find(string path);
     
-    final BundledFile get(string path){
+    final Asset get(string path){
         auto result = find(path);
         if (result.empty)
             return null;
@@ -48,7 +50,7 @@ interface Bundle {
     }
 }
 
-class GluedBundledFile: BundledFile {
+class GluedAsset: Asset {
     @property
     string scheme(){
         return "glue";
@@ -85,18 +87,18 @@ class GluedBundle(string modName): Bundle {
     
     mixin("import "~modName~";");
     alias def = BundleDefinition;
-    alias backend = def.bundledFiles;
+    alias backend = def.Assets;
 //    private string[string] backend;
     
     bool exists(string path){
         return dirName(path) == directoryName && baseName(path) in backend;
     }
     
-    Optional!BundledFile find(string path) {
+    Optional!Asset find(string path) {
         if (!exists(path))
-            return no!BundledFile;
+            return no!Asset;
         //fixme I guess we could copy even less if file impl would also have Definition imported
-        return new GluedBundledFile(path, backend[baseName(path)]).some;
+        return new GluedAsset(path, backend[baseName(path)]).some;
     }
 }
 
@@ -133,11 +135,11 @@ class BundleRegistrar {
         return !containing(scheme, path).empty;
     }
     
-    Optional!BundledFile find(string scheme, string path){
+    Optional!Asset find(string scheme, string path){
         return containing(scheme, path).map!(b => b.get(path)).toOptional;
     }
     
-    final BundledFile get(string scheme, string path){
+    final Asset get(string scheme, string path){
         auto result = find(scheme, path);
         if (result.empty)
             return null;

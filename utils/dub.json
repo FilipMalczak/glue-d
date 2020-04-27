@@ -3,6 +3,9 @@
 		"Filip Malczak"
 	],
 	"copyright": "Copyright © 2019, Filip Malczak",
+	"dependencies": {
+		"optional": "~>1.0.0"
+	},
 	"description": "Common utilities from glue-d, extracted for the sake of other packages extraction",
 	"license": "Apache 2.0",
 	"name": "utils",

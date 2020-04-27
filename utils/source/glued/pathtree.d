@@ -6,6 +6,8 @@ import std.typecons;
 import std.traits;
 import std.meta;
 
+import std.string: strip;
+
 import optional;
 
 
@@ -67,6 +69,8 @@ class PathTreeNode(Data) {
     // impl
     
     private void put(string[] pathComponents, Data data){
+        //todo this introduces a silent feature - root can have value, paths can start and end with dots - cover that with tests! or check some conditions in public put
+        pathComponents = pathComponents.filter!(x => !x.strip().empty).array;
         if (pathComponents.empty){
             size_t nextVersion = (valueChainLink.empty ? -1 : valueChainLink.front().versionNo) + 1;
             auto prev = valueChainLink;
