@@ -102,6 +102,7 @@ struct StaticSink {
     }
     
     //todo this can be useful for runtime logging as well
+    //fixme there is similar class-based structure in utils (treepath) - it would be useful here if it would be a struct
     private struct PackageLogEntry {
         string fullModuleName;
         PackageLogEntry[string] subModules;

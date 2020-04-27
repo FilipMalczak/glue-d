@@ -102,6 +102,62 @@ class GluedBundle(string modName): Bundle {
     }
 }
 
+//todo silent assumption - file is in UTF-8/aligned with string, not wstring, etc
+class FileAsset: Asset {
+    import std.file;
+
+    private string fullPath;
+    
+    this(string path){
+        assert(path.exists && path.isFile);
+        fullPath = path;
+    }
+
+    @property 
+    string scheme(){
+        return "file";
+    }
+    
+    @property
+    string path(){
+        return fullPath;
+    }
+    
+    @property
+    string content(){
+        return readText(fullPath);
+    }
+}
+
+class DirectoryBundle: Bundle {
+    import std.path;
+    import std.file;
+    
+    private string dirPath;
+    
+    this(string path){
+        assert(path.exists && path.isDir); //todo exception
+        dirPath = path;
+    }
+    
+    @property
+    string scheme(){
+        return "file";
+    }
+    
+    bool exists(string path){
+        return dirPath.chainPath(path).exists;
+    }
+    
+    Optional!Asset find(string path){
+        if (!exists(path)){
+            return no!Asset;
+        }
+        //fixme what if between find() and asset.content file will be removed? maybe its a good idea to read it eagerly?
+        return (cast(Asset) new FileAsset(cast(string) dirPath.chainPath(path).array)).some;
+    }
+}
+
 class BundleRegistrar {
     private Bundle[] backend;
     
