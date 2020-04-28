@@ -180,6 +180,7 @@ interface LogSink {
     void consume(LogEvent e);
 }
 
+///Trivial sink, useful mostly for debugging, development and testing
 class StdoutSink: LogSink {
     import std.stdio;
         

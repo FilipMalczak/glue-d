@@ -82,6 +82,7 @@ Scannable[] listScannables(Scannable[] s){
 
 
 //todo bundles need testing
+//todo note down that roots are checked to be scannables during the unrolling, so no need to check on definition
 mixin template unrollLoopThrough(alias roots, string setup, alias aggregateConsumer, alias bundleConsumer, string teardown, 
     string f=__FILE__, int l=__LINE__, string m=__MODULE__, string foo=__FUNCTION__, string prettyFoo=__PRETTY_FUNCTION__){
     import glued.logging;

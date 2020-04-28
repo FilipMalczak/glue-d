@@ -26,7 +26,8 @@ class InterfaceResolver {
     
     I[] getImplementations(I)(){
         //todo I need to clean up references to queryString; I think I'll just merge dejector here, since I basically rewrote it now...
-        return getImplementations(queryString!I).map!(x => cast(I) x).array;
+        auto result = getImplementations(queryString!I).map!(x => cast(I) x).array;
+        return result;
     }
     
     Object[] getImplementations(string interfaceName){
@@ -84,5 +85,20 @@ struct InterfaceProcessor {
     void after(GluedInternals internals){
         log.debug_.emit("Binding InterfaceResolver");
         internals.injector.bind!InterfaceResolver;
+    }
+    
+    void onContextFreeze(GluedInternals internals){
+        log.debug_.emit("Trying to bind interfaces");
+        foreach (i; internals.inheritanceIndex.find(TypeKind.INTERFACE)){
+            auto impls = internals.inheritanceIndex.getImplementations(i).array;
+            if (impls.length == 1){
+                log.debug_.emit("Binding interface ", i, " with sole implementation ", impls[0]);
+                internals.injector.bind(i, impls[0]);
+            } else {
+                if (impls.length == 0){ //todo turn off somehow; by log level, or maybe by dedicated config entry?
+                    log.warn.emit("Interface ", i, " has no implementation in current context!");
+                }
+            }
+        }
     }
 }

@@ -21,14 +21,12 @@ struct ConcreteTypesProcessor {
 
     void handle(A)(GluedInternals internals){
         static if (isMarkedAsStereotype!(A, Component)) {
-            import std.stdio;
             import std.traits;
             log.info.emit("Binding ", fullyQualifiedName!A);
             internals.injector.bind!(A)(new ComponentClassProvider!A(log.logSink));
             log.info.emit("Bound ", fullyQualifiedName!A, " based on its class definition");
         }
         static if (isMarkedAsStereotype!(A, Configuration)){
-            import std.stdio;
             import std.traits;
             log.info.emit("Binding based on configuration ", fullyQualifiedName!A);
             internals.injector.bind!(A, Singleton)(new ComponentClassProvider!A(log.logSink));
@@ -60,4 +58,6 @@ struct ConcreteTypesProcessor {
 
 
     void after(GluedInternals internals){}
+    
+    void onContextFreeze(GluedInternals internals){}
 }

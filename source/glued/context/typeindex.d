@@ -44,7 +44,6 @@ class InheritanceIndex {
         log.debug_.emit(extending, " extends ", extended);
         if (!(extended in implementations))
             implementations[extended] = Set!string();
-        log.debug_.emit(extending, " extends ", extended, " ; ", implementations[extended].asRange.array);
         implementations[extended].put(extending);
     }
 

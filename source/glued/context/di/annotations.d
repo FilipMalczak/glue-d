@@ -20,6 +20,7 @@ struct PostConstruct {}
 
 
 enum DefaultQuery;
+//todo Autowire (verb, imperative) or Autowired (adj, declarative)?
 struct Autowire(T=DefaultQuery) {
     alias Query = T;
 }

@@ -18,6 +18,7 @@ class GluedContext(Processors...) {
     private GluedInternals internals;
     mixin CreateLogger;
     private Logger log;
+    private bool _frozen = false; //todo expose
 
     alias processors = AliasSeq!(Processors);
 
@@ -46,6 +47,7 @@ class GluedContext(Processors...) {
     }
 
     void scan(alias scannables)(){
+        //todo exception if frozen
         enum scanConsumer(string m, string n) = "track!(\""~m~"\", \""~n~"\")();";
         enum bundleConsumer(string modName) = "trackBundle!(\""~modName~"\")();";
         mixin unrollLoopThrough!(scannables, "void doScan() { ", scanConsumer, bundleConsumer, "}");
@@ -58,10 +60,22 @@ class GluedContext(Processors...) {
         after();
         log.info.emit("Scan of ", scannables, " finished");
     }
+    
+    void freeze(){
+        assert(!_frozen); //todo exception (or maybe it should be idempotent?)
+        _frozen = true;
+        static foreach (P; processors)
+            P(P.Logger(logSink)).onContextFreeze(internals);
+    }
 
     @property
     Dejector injector(){
         return internals.injector;
+    }
+    
+    //todo do I really want to expose this?
+    auto get(T)(){
+        return injector.get!T;
     }
 
     @property
@@ -76,7 +90,7 @@ class GluedContext(Processors...) {
             log.info.emit(m, "::", n, " qualifies for tracking");
             static foreach (P; processors){
                 static if (P.canHandle!(aggr)()){
-                    log.info.emit("Processor", fullyQualifiedName!P, " can handle ", m, "::", n);
+                    log.info.emit("Processor ", fullyQualifiedName!P, " can handle ", m, "::", n);
                     P(P.Logger(logSink)).handle!(aggr)(internals); //todo pass sink only, let P create Logger
                 }
             }
