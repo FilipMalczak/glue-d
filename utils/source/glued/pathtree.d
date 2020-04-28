@@ -10,40 +10,55 @@ import std.string: strip;
 
 import optional;
 
-
 /**
  * Data structure that wraps the actual value of the node with metadata used
  * for versioning of node values.
  */
-class ValueChain(Data) {
+interface ValueChain(Data) {
     ///Version number of the value, counting from 0 (initial value)
-    size_t _versionNo;
+    @property
+    size_t versionNo();
+    
     ///Payload
-    Optional!Data _data; //fixme this should be plain Data, not Optional!Data
+    @property
+    Optional!Data data(); //fixme this should be plain Data, not Optional!Data
+    
     ///Optional link to previous value with metadata
-    Optional!(typeof(this)) _previousValue;
+    @property
+    Optional!(ValueChain!Data) previousValue();
     
-    this(size_t v, Optional!Data d, Optional!ValueChain p){
-        _versionNo = v;
-        _data = d;
-        _previousValue = p;
+    final static class SimpleValueChain: ValueChain!Data {
+        size_t _versionNo;
+        Optional!Data _data; //fixme this should be plain Data, not Optional!Data
+        Optional!(ValueChain!Data) _previousValue;
+        
+        this(size_t v, Optional!Data d, Optional!(ValueChain!Data) p){
+            _versionNo = v;
+            _data = d;
+            _previousValue = p;
+        }
+        
+        @property
+        size_t versionNo(){
+            return _versionNo;
+        }
+        
+        @property
+        Optional!Data data(){
+            return _data;
+        }
+        
+        @property
+        Optional!(ValueChain!Data) previousValue(){
+            return _previousValue;
+        }
     }
     
-    @property
-    size_t versionNo(){
-        return _versionNo;
-    }
-    
-    @property
-    Optional!Data data(){
-        return _data;
-    }
-    
-    @property
-    Optional!(typeof(this)) previousValue(){
-        return _previousValue;
+    static final ValueChain!Data of(size_t v, Optional!Data d, Optional!(ValueChain!Data) p){
+        return new SimpleValueChain(v, d, p);
     }
 }
+
 /**
  * ValueChain with actual path under which it is stored. Used when 
  * $(D_PSYMBOL resolve)ing instead of $(D_PSYMBOL get)ing values, allows
@@ -74,7 +89,7 @@ class PathTreeNode(Data) {
         if (pathComponents.empty){
             size_t nextVersion = (valueChain.empty ? -1 : valueChain.front().versionNo) + 1;
             auto prev = valueChain;
-            Link newValueChain = new Link(nextVersion, data.some, prev);
+            Link newValueChain = Link.of(nextVersion, data.some, prev);
             valueChain = newValueChain.some;
         } else {
             auto head = pathComponents[0];
@@ -124,16 +139,14 @@ class PathTreeNode(Data) {
     
 }
 
-//todo view!D should get subtree(string fromNode) -> view!D, withPathsMapped(PathMapper) -> view!D, withValuesMapped(ValueMapper(D, T)) -> view!T
-//alias PathMapper = string delegate(string); // viewPath -> backendPath
-//alias ValueMapper(T, T2) = T2 delegate(string, T); //(viewPath, backendValue) -> viewValue
+alias PathMapper = string delegate(string); // viewPath -> backendPath
+//toddo consider ValueMapper(T, T2) = T2 delegate(string, T); //(viewPath, backendValue) -> viewValue
+alias ValueMapper(T, T2) = T2 delegate(T);
 
 interface PathTreeView(Data){
-    alias Link = ValueChain!Data;
+    Optional!(ValueChain!Data) getValueChain(string path);
     
-    Optional!Link getValueChain(string path);
-    
-    Optional!Link resolveValueChain(string path);
+    Optional!(ValueChain!Data) resolveValueChain(string path, string upToRoot="");
     
     /**
      * Returns: $(D_PSYMBOL some) over data stored under this exact $(D_PSYMBOL path); 
@@ -156,12 +169,95 @@ interface PathTreeView(Data){
      * its closest ancestor; empty optional if no value was assigned anywhere 
      * from that node up to the root of the tree.
      */
-    final Optional!Data resolve(string path) {
-        return resolveValueChain(path).map!(x => x.data).joiner.toOptional;
+    final Optional!Data resolve(string path, string upToRoot="") {
+        return resolveValueChain(path, upToRoot).map!(x => x.data).joiner.toOptional;
     }
     
-    final Optional!size_t resolveVersion(string path) {
-        return resolveValueChain(path).map!(x => x.versionNo).toOptional;
+    final Optional!size_t resolveVersion(string path, string upToRoot="") {
+        return resolveValueChain(path, upToRoot).map!(x => x.versionNo).toOptional;
+    }
+    
+    private static string joinPaths(string a, string b){
+        return cast(string) (a.split(".") ~ b.split(".")).filter!(x => !x.strip.empty).join(".");
+    }
+    
+    final PathTreeView!Data subtree(string from){
+        assert(!from.empty);//todo exception
+        return mapPaths((string s) => joinPaths(from, s));
+    }
+    
+    final PathTreeView!Data mapPaths(PathMapper mapper){
+        class PathView: PathTreeView!Data {
+            private PathTreeView!Data wrapped;
+            private PathMapper foo;
+            
+            this(PathTreeView!Data wrapped, PathMapper foo){
+                this.wrapped = wrapped;
+                this.foo = foo;
+            }
+            
+            Optional!(ValueChain!Data) getValueChain(string path){
+                return wrapped.getValueChain(foo(path));
+            }
+    
+            Optional!(ValueChain!Data) resolveValueChain(string path, string upToRoot=""){
+                return wrapped.resolveValueChain(foo(path), foo(upToRoot));
+            }
+        }
+        return new PathView(this, mapper);
+    }
+    
+    final PathTreeView!NewData mapValues(NewData)(ValueMapper!(Data, NewData) mapper){
+        alias Mapper = ValueMapper!(Data, NewData);
+        
+        class MappedLink: ValueChain!NewData {
+            private ValueChain!Data wrapped;
+            private Mapper foo;
+            
+            this(ValueChain!Data wrapped, Mapper foo){
+
+                this.wrapped = wrapped;
+                this.foo = foo;
+            }
+            
+            @property
+            size_t versionNo(){
+                return wrapped.versionNo;
+            }
+            
+            @property
+            Optional!NewData data(){
+                return wrapped.data.map!(x => foo(x)).toOptional;
+            }
+            
+            @property
+            Optional!(ValueChain!NewData) previousValue(){
+                return wrapped.previousValue.map!(x => cast(ValueChain!NewData) new MappedLink(x, foo)).toOptional;
+            }
+        }
+    
+        class ValueView: PathTreeView!NewData {
+            private PathTreeView!Data wrapped;
+            private Mapper foo;
+            
+            this(PathTreeView!Data wrapped, Mapper foo){
+                this.wrapped = wrapped;
+                this.foo = foo;
+            }
+            
+            Optional!(ValueChain!NewData) getValueChain(string path){
+                return wrapped.getValueChain(path)
+                    .map!(x => cast(ValueChain!NewData) new MappedLink(x, foo))
+                    .toOptional;
+            }
+    
+            Optional!(ValueChain!NewData) resolveValueChain(string path, string upToRoot=""){
+                return wrapped.resolveValueChain(path, upToRoot)
+                    .map!(x => cast(ValueChain!NewData) new MappedLink(x, foo))
+                    .toOptional;
+            }
+        }
+        return new ValueView(this, mapper);
     }
 }
 
@@ -179,8 +275,8 @@ abstract class PathTree(Data): PathTreeView!Data {
     
     Optional!LinkWithCoordinates resolveValueChainWithCoordinates(string path, string upToRoot="");
     
-    final override Optional!Link resolveValueChain(string path) {
-        return resolveValueChainWithCoordinates(path).map!(x => x.valueChain).toOptional;
+    final override Optional!Link resolveValueChain(string path, string upToRoot="") {
+        return resolveValueChainWithCoordinates(path, upToRoot).map!(x => x.valueChain).toOptional;
     }
     
     /**
@@ -188,8 +284,8 @@ abstract class PathTree(Data): PathTreeView!Data {
      * $(D_PSYMBOL resolve(path)) wrapped into optional; empty if aforementioned 
      * call would result in empty optional.
      */
-    final Optional!string resolveCoordinates(string path) {
-        return resolveValueChainWithCoordinates(path).map!(x => x.realPath).toOptional;
+    final Optional!string resolveCoordinates(string path, string upToRoot="") {
+        return resolveValueChainWithCoordinates(path, upToRoot).map!(x => x.realPath).toOptional;
     }
     
     //todo pop(pathComponents) (decrements versionNo, brings back previous val, returns removed value)
@@ -245,4 +341,25 @@ unittest {
     assert(tree.resolve("abc.def.g.h") == "y".some);
     assert(tree.resolveVersion("abc.def.g.h") == 1.some);
     assert(tree.resolveCoordinates("abc.def.g.h") == "abc.def.g".some);
+    
+    auto mappedPaths = tree.subtree("abc");
+    assert(mappedPaths.get("def.g") == "y".some);
+    assert(mappedPaths.getVersion("def.g") == 1.some);
+    
+    assert(mappedPaths.resolve("def.g.h") == "y".some);
+    assert(mappedPaths.resolveVersion("def.g.h") == 1.some);
+    
+    mappedPaths = mappedPaths.subtree("def");
+    assert(mappedPaths.get("g") == "y".some);
+    assert(mappedPaths.getVersion("g") == 1.some);
+    
+    assert(mappedPaths.resolve("g.h") == "y".some);
+    assert(mappedPaths.resolveVersion("g.h") == 1.some);
+    
+    auto mappedKeys = mappedPaths.mapValues!size_t(x => x.length);
+    assert(mappedKeys.get("g") == 1.some);
+    assert(mappedKeys.getVersion("g") == 1.some);
+    
+    assert(mappedKeys.resolve("g.h") == 1.some);
+    assert(mappedKeys.resolveVersion("g.h") == 1.some);
 }
