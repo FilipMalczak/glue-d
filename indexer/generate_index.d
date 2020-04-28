@@ -197,7 +197,7 @@ bool generateBundle(SourceSet sourceSet, DirEntry d){
     auto descriptorPath = chainPath(d.name, ".bundle");
     if (descriptorPath.exists){
         auto descriptorFile = File(descriptorPath, "r");
-        auto toBundle = descriptorFile.byLine.array;
+        auto toBundle = descriptorFile.byLineCopy.array;
         writeln(__FILE__, ":", __LINE__, " ", "toBundle: ", toBundle);
         if (toBundle.empty) {
             writeln(__FILE__, ":", __LINE__, " ", "Empty bundle");

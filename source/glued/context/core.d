@@ -97,6 +97,7 @@ class GluedContext(Processors...) {
         }
     }
 
+    //todo this needs to go to some processor, I think
     void trackBundle(string modName)(){
         log.info.emit("Tracking glue-d bundle for module "~modName);
         internals.bundleRegistrar.register!(modName)();

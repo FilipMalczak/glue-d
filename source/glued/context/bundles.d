@@ -20,12 +20,18 @@ interface Asset {
         return scheme~"://"~path;
     }
     
+    //todo support binary assets
+    // import(binary file) works properly
+    // string s; cast(byte[]) s works as well
+    // byte[] b; cast(string) b too
     @property
     string content();
+    
+    //todo size
 }
 
 interface Bundle {
-    //todo add ls(), same goes for registrar, it should return urls
+    Asset[] ls(); //fixme registrar performs ls lazily (with auto) while this requires array result
 
     @property
     string scheme();
@@ -83,12 +89,11 @@ class GluedBundle(string modName): Bundle {
         return "glue";
     }
     
-    enum directoryName = modName.split(".").join(dirSeparator);
+    enum directoryName = modName.split(".")[0..$-1].join(dirSeparator);
     
     mixin("import "~modName~";");
     alias def = BundleDefinition;
-    alias backend = def.Assets;
-//    private string[string] backend;
+    alias backend = def.bundledFiles;
     
     bool exists(string path){
         return dirName(path) == directoryName && baseName(path) in backend;
@@ -98,7 +103,11 @@ class GluedBundle(string modName): Bundle {
         if (!exists(path))
             return no!Asset;
         //fixme I guess we could copy even less if file impl would also have Definition imported
-        return new GluedAsset(path, backend[baseName(path)]).some;
+        return (cast(Asset) new GluedAsset(path, backend[baseName(path)])).some;
+    }
+    
+    Asset[] ls() {
+        return backend.keys().map!(x => cast(Asset) find(directoryName~dirSeparator~x).front()).array;
     }
 }
 
@@ -129,6 +138,7 @@ class FileAsset: Asset {
     }
 }
 
+//todo fs based bundles require a lot of testing
 class DirectoryBundle: Bundle {
     import std.path;
     import std.file;
@@ -155,6 +165,10 @@ class DirectoryBundle: Bundle {
         }
         //fixme what if between find() and asset.content file will be removed? maybe its a good idea to read it eagerly?
         return (cast(Asset) new FileAsset(cast(string) dirPath.chainPath(path).array)).some;
+    }
+    
+    Asset[] ls(){
+        return dirEntries(dirPath, SpanMode.depth).map!(x => cast(Asset) find(cast(string) asRelativePath(x.name, dirPath).array).front()).array;
     }
 }
 
@@ -193,6 +207,10 @@ class BundleRegistrar {
     
     Optional!Asset find(string scheme, string path){
         return containing(scheme, path).map!(b => b.get(path)).toOptional;
+    }
+    
+    auto ls(){
+        return backend.map!(x => x.ls()).joiner;
     }
     
     final Asset get(string scheme, string path){
