@@ -14,10 +14,11 @@ struct GluedInternals {
     BundleRegistrar bundleRegistrar;
 }
 
+//todo maybe lets pass sink and internals as properties or with init method?
 interface Processor {
-    void before(GluedInternals internals);
+    void beforeScan(GluedInternals internals);
     
-    void after(GluedInternals internals);
+    void afterScan(GluedInternals internals);
     
     void onContextFreeze(GluedInternals internals);
     

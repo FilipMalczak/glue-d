@@ -50,7 +50,14 @@ class InterfaceResolver {
 class InterfaceProcessor: Processor {
     mixin RequiredProcessorCode;
 
-    void before(GluedInternals internals){}
+    void beforeScan(GluedInternals internals){
+        //todo dejector has canResolve(string), but no canResolve(T)()
+        //todo this should be onContextInit
+        if (internals.injector.resolveQuery!InterfaceResolver().empty) {
+            log.info.emit("Binding InterfaceResolver");
+            internals.injector.bind!InterfaceResolver;
+        }
+    }
 
     static bool canHandle(A)(){
         //todo reuse isObjectType from dejector
@@ -58,7 +65,7 @@ class InterfaceProcessor: Processor {
     }
 
     void handle(A)(GluedInternals internals){
-        static if (canHandle!A()){ //todo lopg about it
+        static if (canHandle!A()){ //todo log about it
             immutable key = fullyQualifiedName!A; //todo queryString?
             log.debug_.emit("Handling ", key);
             static if (is(A == interface)){
@@ -83,10 +90,7 @@ class InterfaceProcessor: Processor {
         }
     }
 
-    void after(GluedInternals internals){
-        log.debug_.emit("Binding InterfaceResolver");
-        internals.injector.bind!InterfaceResolver;
-    }
+    void afterScan(GluedInternals internals){}
     
     void onContextFreeze(GluedInternals internals){
         log.debug_.emit("Trying to bind interfaces");

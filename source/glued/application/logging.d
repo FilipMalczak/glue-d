@@ -110,7 +110,7 @@ version(unittest){
                 action = ActionTaken.CONSUMED;
             }
         }
-        void discard(LogEvent e){ action = ActionTaken.DISCARDED; };
+        void discard(LogEvent e){ action = ActionTaken.DISCARDED; }
         new FilteringSink(new Consume, pred, &discard).consume(e);
         return action;
     }

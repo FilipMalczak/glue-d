@@ -25,14 +25,14 @@ struct CompositeProcessor(Processors...) {// if allSatisfy!(P => is(P: Processor
         }
     }
     
-    void before(GluedInternals internals){
+    void beforeScan(GluedInternals internals){
         static foreach (i; Processors.length.iota)
-            processors[i].before(internals);
+            processors[i].beforeScan(internals);
     }
     
-    void after(GluedInternals internals){
+    void afterScan(GluedInternals internals){
         static foreach (i; Processors.length.iota)
-            processors[i].after(internals);
+            processors[i].afterScan(internals);
     }
     
     void onContextFreeze(GluedInternals internals){
@@ -69,12 +69,12 @@ class GluedContext(Processors...) {
         internals.injector.bind!(BundleRegistrar)(new InstanceProvider(cast(Object) internals.bundleRegistrar));
     }
 
-    private void before(){
-        processor.before(internals);
+    private void beforeScan(){
+        processor.beforeScan(internals);
     }
 
-    private void after(){
-        processor.after(internals);
+    private void afterScan(){
+        processor.afterScan(internals);
     }
 
     void scan(alias scannables)(){
@@ -84,11 +84,11 @@ class GluedContext(Processors...) {
         mixin unrollLoopThrough!(scannables, "void doScan() { ", scanConsumer, bundleConsumer, "}");
 
         log.info.emit("Before ", scannables);
-        before();
+        beforeScan();
         log.info.emit("Scanning ", scannables);
         doScan();
         log.info.emit("After ", scannables);
-        after();
+        afterScan();
         log.info.emit("Scan of ", scannables, " finished");
     }
     
