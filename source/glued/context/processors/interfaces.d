@@ -10,7 +10,7 @@ import glued.utils;
 import glued.set;
 
 import glued.context.typeindex: InheritanceIndex, TypeKind;
-import glued.context.processors.internals;
+import glued.context.processors.api;
 
 import dejector;
 
@@ -47,9 +47,8 @@ class InterfaceResolver {
     }
 }
 
-struct InterfaceProcessor {
-    mixin CreateLogger;
-    Logger log;
+class InterfaceProcessor: Processor {
+    mixin RequiredProcessorCode;
 
     void before(GluedInternals internals){}
 
@@ -59,25 +58,27 @@ struct InterfaceProcessor {
     }
 
     void handle(A)(GluedInternals internals){
-        immutable key = fullyQualifiedName!A; //todo queryString?
-        log.debug_.emit("Handling ", key);
-        static if (is(A == interface)){
-            immutable kind = TypeKind.INTERFACE;
-        } else {
-            static if (__traits(isAbstractClass, A))
-                immutable kind = TypeKind.ABSTRACT_CLASS;
-            else
-                immutable kind = TypeKind.CONCRETE_CLASS;
-        }
-        log.debug_.emit("Kind: ", kind);
-        internals.inheritanceIndex.markExists(key, kind);
-        import std.traits;
-        static foreach (b; BaseTypeTuple!A){
-            static if (!is(b == Object)){
-                //todo ditto
-                log.trace.emit(fullyQualifiedName!A, " extends ", fullyQualifiedName!b);
-                internals.inheritanceIndex.markExtends(fullyQualifiedName!A, fullyQualifiedName!b);
-                handle!(b)(internals);
+        static if (canHandle!A()){ //todo lopg about it
+            immutable key = fullyQualifiedName!A; //todo queryString?
+            log.debug_.emit("Handling ", key);
+            static if (is(A == interface)){
+                immutable kind = TypeKind.INTERFACE;
+            } else {
+                static if (__traits(isAbstractClass, A))
+                    immutable kind = TypeKind.ABSTRACT_CLASS;
+                else
+                    immutable kind = TypeKind.CONCRETE_CLASS;
+            }
+            log.debug_.emit("Kind: ", kind);
+            internals.inheritanceIndex.markExists(key, kind);
+            import std.traits;
+            static foreach (b; BaseTypeTuple!A){
+                static if (!is(b == Object)){
+                    //todo ditto
+                    log.trace.emit(fullyQualifiedName!A, " extends ", fullyQualifiedName!b);
+                    internals.inheritanceIndex.markExtends(fullyQualifiedName!A, fullyQualifiedName!b);
+                    handle!(b)(internals);
+                }
             }
         }
     }

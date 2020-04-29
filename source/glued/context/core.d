@@ -16,13 +16,12 @@ import glued.context.bundles;
 
 import dejector;
 
-
-struct CompositeProcessor(Processors...){
+struct CompositeProcessor(Processors...) {// if allSatisfy!(P => is(P: Processor) && __traits(compiles, new P(cast(LogSink) null)){ //todo
     private Tuple!(Processors) processors;
     
     this(LogSink sink){
         static foreach (i, P; Processors){
-            processors[i] = P(P.Logger(sink));
+            processors[i] = new P(sink);
         }
     }
     
@@ -42,12 +41,8 @@ struct CompositeProcessor(Processors...){
     }
     
     void handle(A)(GluedInternals internals){
-        static foreach (i; Processors.length.iota) {
-            static if (Processors[i].canHandle!(A)()){
-//                log.info.emit("Processor ", fullyQualifiedName!P, " can handle ", m, "::", n);
-                processors[i].handle!(A)(internals); //todo pass sink only, let P create Logger
-            }
-        }
+        static foreach (i; Processors.length.iota)
+            processors[i].handle!(A)(internals);
     }
 }
 
