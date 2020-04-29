@@ -2,10 +2,8 @@
 
 set -x
 
-rm ./source/**/*_index.d
-rm ./test/**/*_index.d
-
-rm ./source/**/**/*_index.d
-rm ./test/**/**/*_index.d
+find . -name "*.lst" -type f -delete
+find . \( -name "*_index.d" ! -name "generate_index.d" \) -type f -delete
+find . -name "*_bundle.d" -type f -delete
 
 dub clean
