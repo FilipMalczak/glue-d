@@ -80,6 +80,8 @@ Scannable[] listScannables(Scannable[] s){
     return s;
 }
 
+//todo gather consumers as a single aggregate
+//todo beforeScannable, afterScannable, beforeScan, afterScan
 
 //todo bundles need testing
 //todo note down that roots are checked to be scannables during the unrolling, so no need to check on definition
