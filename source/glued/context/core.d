@@ -2,6 +2,8 @@ module glued.context.core;
 
 import std.meta;
 import std.traits;
+import std.typecons;
+import std.range;
 
 import glued.stereotypes;
 import glued.mirror;
@@ -14,13 +16,48 @@ import glued.context.bundles;
 
 import dejector;
 
+
+struct CompositeProcessor(Processors...){
+    private Tuple!(Processors) processors;
+    
+    this(LogSink sink){
+        static foreach (i, P; Processors){
+            processors[i] = P(P.Logger(sink));
+        }
+    }
+    
+    void before(GluedInternals internals){
+        static foreach (i; Processors.length.iota)
+            processors[i].before(internals);
+    }
+    
+    void after(GluedInternals internals){
+        static foreach (i; Processors.length.iota)
+            processors[i].after(internals);
+    }
+    
+    void onContextFreeze(GluedInternals internals){
+        static foreach (i; Processors.length.iota)
+            processors[i].onContextFreeze(internals);
+    }
+    
+    void handle(A)(GluedInternals internals){
+        static foreach (i; Processors.length.iota) {
+            static if (Processors[i].canHandle!(A)()){
+//                log.info.emit("Processor ", fullyQualifiedName!P, " can handle ", m, "::", n);
+                processors[i].handle!(A)(internals); //todo pass sink only, let P create Logger
+            }
+        }
+    }
+}
+
 class GluedContext(Processors...) {
     private GluedInternals internals;
     mixin CreateLogger;
     private Logger log;
     private bool _frozen = false; //todo expose
 
-    alias processors = AliasSeq!(Processors);
+    CompositeProcessor!Processors processor;
 
     @property //fixme should it be private?
     private LogSink logSink(){
@@ -29,6 +66,7 @@ class GluedContext(Processors...) {
 
     this(LogSink logSink){
         this.log = Logger(logSink);
+        this.processor = CompositeProcessor!Processors(logSink);
         internals = GluedInternals(new Dejector(), logSink, new InheritanceIndex(logSink), new BundleRegistrar());
         internals.injector.bind!(Dejector)(new InstanceProvider(internals.injector));
         internals.injector.bind!(InheritanceIndex)(new InstanceProvider(internals.inheritanceIndex));
@@ -37,13 +75,11 @@ class GluedContext(Processors...) {
     }
 
     private void before(){
-        static foreach (P; processors)
-            P(P.Logger(logSink)).before(internals);
+        processor.before(internals);
     }
 
     private void after(){
-        static foreach (P; processors)
-            P(P.Logger(logSink)).after(internals);
+        processor.after(internals);
     }
 
     void scan(alias scannables)(){
@@ -64,8 +100,7 @@ class GluedContext(Processors...) {
     void freeze(){
         assert(!_frozen); //todo exception (or maybe it should be idempotent?)
         _frozen = true;
-        static foreach (P; processors)
-            P(P.Logger(logSink)).onContextFreeze(internals);
+        processor.onContextFreeze(internals);
     }
 
     @property
@@ -88,12 +123,7 @@ class GluedContext(Processors...) {
         alias aggr = import_!(m, n);
         static if (qualifiesForTracking!(aggr)()){
             log.info.emit(m, "::", n, " qualifies for tracking");
-            static foreach (P; processors){
-                static if (P.canHandle!(aggr)()){
-                    log.info.emit("Processor ", fullyQualifiedName!P, " can handle ", m, "::", n);
-                    P(P.Logger(logSink)).handle!(aggr)(internals); //todo pass sink only, let P create Logger
-                }
-            }
+            processor.handle!aggr(internals);
         }
     }
 

@@ -32,7 +32,7 @@ class GluedRuntime(alias scannables) {
 //interface StereotypedInstance(S) {prop S stereotype, prop Object instance}
 //interface StereotypeDescriptor{ prop string stereotypeTypeName }
         log.debug_.emit("Scan finished");
-        resolveLogSink(sink);
+        resolveLogSink(sink); //todo if there is exception before this step, turn off any filtering (maybe keep buildLog.conf), flush to stderr, then let the failure propagate (so we can investigate, but with logs)
         runActions();
         log.info.emit("Runtime started");
     }
