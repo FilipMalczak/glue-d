@@ -58,13 +58,15 @@ class InterfaceProcessor: Processor {
             internals.injector.bind!InterfaceResolver;
         }
     }
+    
+    void beforeScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable) {}
 
-    static bool canHandle(A)(){
+    private static bool canHandle(A)(){
         //todo reuse isObjectType from dejector
         return is(A == interface) || is(A == class);
     }
 
-    void handle(A)(GluedInternals internals){
+    void handleType(A)(GluedInternals internals){
         static if (canHandle!A()){ //todo log about it
             immutable key = fullyQualifiedName!A; //todo queryString?
             log.debug_.emit("Handling ", key);
@@ -84,11 +86,15 @@ class InterfaceProcessor: Processor {
                     //todo ditto
                     log.trace.emit(fullyQualifiedName!A, " extends ", fullyQualifiedName!b);
                     internals.inheritanceIndex.markExtends(fullyQualifiedName!A, fullyQualifiedName!b);
-                    handle!(b)(internals);
+                    handleType!(b)(internals);
                 }
             }
         }
     }
+    
+    void handleBundle(string modName)(){}
+
+    void afterScan(alias scannable)(GluedInternals internals) if (isScannable!scannable) {}
 
     void afterScan(GluedInternals internals){}
     

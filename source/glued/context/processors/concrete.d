@@ -14,6 +14,8 @@ class ConcreteTypesProcessor: Processor {
 
     void beforeScan(GluedInternals internals){}
 
+    void beforeScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable) {}
+
     private static bool canHandle(A)(){
         return is(A == class);
     }
@@ -54,7 +56,7 @@ class ConcreteTypesProcessor: Processor {
         log.info.emit("Bound chosen members on configuration ", fullyQualifiedName!A);
     }
 
-    void handle(A)(GluedInternals internals){
+    void handleType(A)(GluedInternals internals){
         static if (canHandle!A()) { //todo log about it
             static if (isMarkedAsStereotype!(A, Component)) {
                 handleComponent!A(internals);
@@ -64,6 +66,10 @@ class ConcreteTypesProcessor: Processor {
             }
         }
     }
+    
+    void handleBundle(string modName)(){}
+
+    void afterScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable) {}
 
     void afterScan(GluedInternals internals){}
     

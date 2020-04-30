@@ -1,5 +1,7 @@
 module glued.context.processors.api;
 
+public import glued.scannable: Scannable, isScannable;
+
 import glued.logging: LogSink;
 
 import glued.context.bundles: BundleRegistrar;
@@ -18,11 +20,19 @@ struct GluedInternals {
 interface Processor {
     void beforeScan(GluedInternals internals);
     
+    //fixme unused yet
+    void beforeScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable);
+    
+    void handleType(A)(GluedInternals internals);
+    
+    void handleBundle(string modName)(GluedInternals internals);
+    
+    //fixme unused yet
+    void afterScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable);
+    
     void afterScan(GluedInternals internals);
     
     void onContextFreeze(GluedInternals internals);
-    
-    void handle(A)(GluedInternals internals);
 }
 
 //fixme not really an api

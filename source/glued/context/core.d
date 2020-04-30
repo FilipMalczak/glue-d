@@ -40,10 +40,17 @@ struct CompositeProcessor(Processors...) {// if allSatisfy!(P => is(P: Processor
             processors[i].onContextFreeze(internals);
     }
     
-    void handle(A)(GluedInternals internals){
+    void handleType(A)(GluedInternals internals){
         static foreach (i; Processors.length.iota)
-            processors[i].handle!(A)(internals);
+            processors[i].handleType!(A)(internals);
     }
+    
+    void handleBundle(string modName)(GluedInternals internals){
+        static foreach (i; Processors.length.iota)
+            processors[i].handleBundle!(modName)(internals);
+    }
+    
+    //todo before-/afterScannable
 }
 
 class GluedContext(Processors...) {
@@ -118,13 +125,14 @@ class GluedContext(Processors...) {
         alias aggr = import_!(m, n);
         static if (qualifiesForTracking!(aggr)()){
             log.info.emit(m, "::", n, " qualifies for tracking");
-            processor.handle!aggr(internals);
+            processor.handleType!aggr(internals);
         }
     }
 
     //todo this needs to go to some processor, I think
     void trackBundle(string modName)(){
         log.info.emit("Tracking glue-d bundle for module "~modName);
+        processor.handleBundle!modName(); //todo move below to processor
         internals.bundleRegistrar.register!(modName)();
     }
 

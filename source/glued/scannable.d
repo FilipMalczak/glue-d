@@ -28,6 +28,8 @@ struct Scannable {
     }
 }
 
+enum isScannable(alias s) = is(typeof(s) == Scannable);
+
 Scannable at(string root, string qualifier="", string testQualifier="test"){
     return Scannable(root, qualifier, testQualifier);
 }
