@@ -16,34 +16,36 @@ struct GluedInternals {
     BundleRegistrar bundleRegistrar;
 }
 
-//todo maybe lets pass sink and internals as properties or with init method?
 interface Processor {
-    void beforeScan(GluedInternals internals);
+    void init(GluedInternals);
+
+    void beforeScan();
     
-    //fixme unused yet
-    void beforeScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable);
+    void beforeScannable(alias scannable)() if (isScannable!scannable);
     
-    void handleType(A)(GluedInternals internals);
+    void handleType(A)();
     
-    void handleBundle(string modName)(GluedInternals internals);
+    void handleBundle(string modName)();
     
-    //fixme unused yet
-    void afterScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable);
+    void afterScannable(alias scannable)() if (isScannable!scannable);
     
-    void afterScan(GluedInternals internals);
+    void afterScan();
     
-    void onContextFreeze(GluedInternals internals);
+    void onContextFreeze();
 }
 
 //fixme not really an api
 
 import glued.logging;
 
-mixin template RequiredProcessorCode() {
+
+mixin template ProcessorSetup() {
     mixin CreateLogger;
-    Logger log;
+    private Logger log;
+    private GluedInternals internals;
     
-    this(LogSink sink){
-        log = Logger(sink);
+    void init(GluedInternals i){
+        this.internals = i;
+        this.log = Logger(i.logSink);
     }
 }

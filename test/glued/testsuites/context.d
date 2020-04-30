@@ -84,5 +84,6 @@ unittest {
     }
     //for I2:
     //["ex3.mod.C2", "ex3.mod.C3", "ex3.mod.C4", "ex3.mod.C5"] //without C2 because it is Tracked and not a Component, hence is not instantiable
-    writeln("autobinding interfaces passed (very early stage)");
+    writeln("autobinding all implementations passed");
 }
+//todo autobinding sole impl

@@ -19,35 +19,38 @@ import dejector;
 struct CompositeProcessor(Processors...) {// if allSatisfy!(P => is(P: Processor) && __traits(compiles, new P(cast(LogSink) null)){ //todo
     private Tuple!(Processors) processors;
     
-    this(LogSink sink){
+    this(GluedInternals internals){
         static foreach (i, P; Processors){
-            processors[i] = new P(sink);
+            processors[i] = new P();
+            processors[i].init(internals);
         }
     }
     
-    void beforeScan(GluedInternals internals){
-        static foreach (i; Processors.length.iota)
-            processors[i].beforeScan(internals);
+    void beforeScan(){
+        static foreach (i; Processors.length.iota) {
+            processors[i].beforeScan();
+        }   
     }
     
-    void afterScan(GluedInternals internals){
-        static foreach (i; Processors.length.iota)
-            processors[i].afterScan(internals);
+    void handleType(A)(){
+        static foreach (i; Processors.length.iota) {
+            processors[i].handleType!(A)();
+        }
     }
     
-    void onContextFreeze(GluedInternals internals){
+    void handleBundle(string modName)(){
         static foreach (i; Processors.length.iota)
-            processors[i].onContextFreeze(internals);
+            processors[i].handleBundle!(modName)();
     }
     
-    void handleType(A)(GluedInternals internals){
+    void afterScan(){
         static foreach (i; Processors.length.iota)
-            processors[i].handleType!(A)(internals);
+            processors[i].afterScan();
     }
     
-    void handleBundle(string modName)(GluedInternals internals){
+    void onContextFreeze(){
         static foreach (i; Processors.length.iota)
-            processors[i].handleBundle!(modName)(internals);
+            processors[i].onContextFreeze();
     }
     
     //todo before-/afterScannable
@@ -68,8 +71,8 @@ class GluedContext(Processors...) {
 
     this(LogSink logSink){
         this.log = Logger(logSink);
-        this.processor = CompositeProcessor!Processors(logSink);
         internals = GluedInternals(new Dejector(), logSink, new InheritanceIndex(logSink), new BundleRegistrar());
+        this.processor = CompositeProcessor!Processors(internals);
         internals.injector.bind!(Dejector)(new InstanceProvider(internals.injector));
         internals.injector.bind!(InheritanceIndex)(new InstanceProvider(internals.inheritanceIndex));
         internals.injector.bind!(LogSink)(new InstanceProvider(cast(Object) logSink));
@@ -77,19 +80,19 @@ class GluedContext(Processors...) {
     }
 
     private void beforeScan(){
-        processor.beforeScan(internals);
+        processor.beforeScan();
     }
 
     private void afterScan(){
-        processor.afterScan(internals);
+        processor.afterScan();
     }
 
     void scan(alias scannables)(){
         //todo exception if frozen
         enum scanConsumer(string m, string n) = "track!(\""~m~"\", \""~n~"\")();";
         enum bundleConsumer(string modName) = "trackBundle!(\""~modName~"\")();";
+        
         mixin unrollLoopThrough!(scannables, "void doScan() { ", scanConsumer, bundleConsumer, "}");
-
         log.info.emit("Before ", scannables);
         beforeScan();
         log.info.emit("Scanning ", scannables);
@@ -102,7 +105,7 @@ class GluedContext(Processors...) {
     void freeze(){
         assert(!_frozen); //todo exception (or maybe it should be idempotent?)
         _frozen = true;
-        processor.onContextFreeze(internals);
+        processor.onContextFreeze();
     }
 
     @property
@@ -125,7 +128,7 @@ class GluedContext(Processors...) {
         alias aggr = import_!(m, n);
         static if (qualifiesForTracking!(aggr)()){
             log.info.emit(m, "::", n, " qualifies for tracking");
-            processor.handleType!aggr(internals);
+            processor.handleType!aggr();
         }
     }
 

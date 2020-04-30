@@ -180,6 +180,40 @@ interface LogSink {
     void consume(LogEvent e);
 }
 
+
+class DeferredLogSink: LogSink {
+    private LogEvent[] _deferred;
+    private LogSink _delegate = null;
+    
+    void consume(LogEvent e){
+        if (_delegate is null){
+            _deferred ~= e;
+        } else {
+            _delegate.consume(e);
+        }
+    }
+    
+    @property
+    bool resolved(){
+        return _delegate !is null;
+    }
+    
+    void resolve(LogSink sink){
+        if (_delegate is null){
+            _delegate = sink;
+            flushDeferred();
+        } else {
+            assert(false); //todo exception
+        }
+    }
+    
+    private void flushDeferred(){
+        foreach (e; _deferred)
+            _delegate.consume(e);
+        _deferred = [];
+    }
+}
+
 ///Trivial sink, useful mostly for debugging, development and testing
 class StdoutSink: LogSink {
     import std.stdio;

@@ -48,9 +48,10 @@ class InterfaceResolver {
 }
 
 class InterfaceProcessor: Processor {
-    mixin RequiredProcessorCode;
+    mixin ProcessorSetup;
+    
 
-    void beforeScan(GluedInternals internals){
+    void beforeScan(){
         //todo dejector has canResolve(string), but no canResolve(T)()
         //todo this should be onContextInit
         if (internals.injector.resolveQuery!InterfaceResolver().empty) {
@@ -59,14 +60,14 @@ class InterfaceProcessor: Processor {
         }
     }
     
-    void beforeScannable(alias scannable)(GluedInternals internals) if (isScannable!scannable) {}
+    void beforeScannable(alias scannable)() if (isScannable!scannable) {}
 
     private static bool canHandle(A)(){
         //todo reuse isObjectType from dejector
         return is(A == interface) || is(A == class);
     }
 
-    void handleType(A)(GluedInternals internals){
+    void handleType(A)(){
         static if (canHandle!A()){ //todo log about it
             immutable key = fullyQualifiedName!A; //todo queryString?
             log.debug_.emit("Handling ", key);
@@ -86,7 +87,7 @@ class InterfaceProcessor: Processor {
                     //todo ditto
                     log.trace.emit(fullyQualifiedName!A, " extends ", fullyQualifiedName!b);
                     internals.inheritanceIndex.markExtends(fullyQualifiedName!A, fullyQualifiedName!b);
-                    handleType!(b)(internals);
+                    handleType!(b)();
                 }
             }
         }
@@ -94,11 +95,11 @@ class InterfaceProcessor: Processor {
     
     void handleBundle(string modName)(){}
 
-    void afterScan(alias scannable)(GluedInternals internals) if (isScannable!scannable) {}
+    void afterScan(alias scannable)() if (isScannable!scannable) {}
 
-    void afterScan(GluedInternals internals){}
+    void afterScan(){}
     
-    void onContextFreeze(GluedInternals internals){
+    void onContextFreeze(){
         log.debug_.emit("Trying to bind interfaces");
         foreach (i; internals.inheritanceIndex.find(TypeKind.INTERFACE)){
             auto impls = internals.inheritanceIndex.getImplementations(i).array;
