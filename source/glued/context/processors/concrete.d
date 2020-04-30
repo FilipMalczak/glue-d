@@ -12,7 +12,6 @@ import dejector;
 class ConcreteTypesProcessor: Processor {
     mixin ProcessorSetup;
     
-
     void beforeScan(){}
 
     void beforeScannable(alias scannable)() if (isScannable!scannable) {}

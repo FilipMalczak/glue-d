@@ -16,7 +16,7 @@ import glued.context.bundles;
 
 import dejector;
 
-struct CompositeProcessor(Processors...) {// if allSatisfy!(P => is(P: Processor) && __traits(compiles, new P(cast(LogSink) null)){ //todo
+struct CompositeProcessor(Processors...) if (allSatisfy!(P => is(P: Processor) && __traits(compiles, new P()))) {
     private Tuple!(Processors) processors;
     
     this(GluedInternals internals){
@@ -132,11 +132,8 @@ class GluedContext(Processors...) {
         }
     }
 
-    //todo this needs to go to some processor, I think
     void trackBundle(string modName)(){
-        log.info.emit("Tracking glue-d bundle for module "~modName);
-        processor.handleBundle!modName(); //todo move below to processor
-        internals.bundleRegistrar.register!(modName)();
+        processor.handleBundle!modName();
     }
 
     private static bool qualifiesForTracking(alias T)(){
@@ -145,4 +142,4 @@ class GluedContext(Processors...) {
 
 }
 
-alias DefaultGluedContext = GluedContext!(ConcreteTypesProcessor, InterfaceProcessor);
+alias DefaultGluedContext = GluedContext!(ConcreteTypesProcessor, InterfaceProcessor, BundlesProcessor);

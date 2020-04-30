@@ -11,6 +11,7 @@ import dejector: Dejector;
 
 struct GluedInternals {
     Dejector injector;
+    //todo these all can be resolved via injector...
     LogSink logSink;
     InheritanceIndex inheritanceIndex;
     BundleRegistrar bundleRegistrar;
