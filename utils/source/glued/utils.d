@@ -1,14 +1,36 @@
 module glued.utils;
 
+import std.algorithm;
 import std.meta;
 import std.range;
 import std.traits;
+import std.string;
+
+enum NewLineMode {
+    ALWAYS,
+    ON_CONTENT,
+    NEVER
+}
 
 struct StringBuilder {
     string result;
     
-    void append(string line, bool newLine=true){
-        result ~= line ~ (newLine ? "\n" : "");
+    void append(string line, NewLineMode newLine=NewLineMode.ON_CONTENT){
+        string suffix;
+        with (NewLineMode)
+        {
+            final switch (newLine)
+            {
+                case ALWAYS: suffix = "\n"; break;
+                case ON_CONTENT: suffix = line.strip.empty ? "" : "\n"; break;
+                case NEVER: suffix = ""; break;
+            }
+        }
+        result ~= line ~ suffix;
+    }
+    
+    void removeEmptyLines(){
+        result = result.split("\n").filter!(x => !x.strip.empty).join("\n");
     }
 }
 

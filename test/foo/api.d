@@ -1,6 +1,6 @@
 module foo.api;
 
-import glued.context.annotations; //ditto from operators
+import glued.application; //ditto from operators
 
 import foo.operators;
 

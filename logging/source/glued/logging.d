@@ -70,7 +70,7 @@ string format(LogEvent e){
     //todo enforce filename length in similar fashion; probably wrap these functions into struct that takes separator as field
     string filename = e.eventLocation.filename;
     string tid;
-    return (filename~":"~to!string(e.eventLocation.line)).leftJustify(50)~" @ "~
+    return (filename~":"~to!string(e.eventLocation.line)).leftJustify(55)~" @ "~
     ( e.timestamp.empty ? 
         "N/A (compile-time)".center(25, ' ') : 
         e.timestamp.front().to!string.cutDown(25).leftJustify(25, ' ')

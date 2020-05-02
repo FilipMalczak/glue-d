@@ -1,4 +1,4 @@
-module glued.context.di.annotations;
+module glued.application.di.annotations;
 
 struct Bind(T) {
     alias As = T;

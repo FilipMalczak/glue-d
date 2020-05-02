@@ -102,6 +102,7 @@ string prepareScan(alias scannable, string setup, alias aggregateConsumer, alias
     }
     
     builder.append(teardown);
+    builder.removeEmptyLines();
     return builder.result;
 }
 

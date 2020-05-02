@@ -1,14 +1,14 @@
-module glued.context.di.providers;
+module glued.application.di.providers;
 
 import std.traits;
 
 import glued.annotations;
 import glued.logging;
 
-import glued.context.resolveCall;
+import glued.application.di.resolveCall;
 
-import glued.context.di.annotations;
-import glued.context.di.initializers;
+import glued.application.di.annotations;
+import glued.application.di.initializers;
 
 import dejector;
 

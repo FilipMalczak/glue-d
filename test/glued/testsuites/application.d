@@ -6,8 +6,8 @@ unittest {
     auto runtime = new GluedRuntime!(at("apps.app1"))();
     runtime.start(["a"]);
     import apps.app1.impl: TestData;
-    TestData data = runtime.currentContext.get!TestData;
+    TestData data = runtime.injector.get!TestData;
     assert(data.touched);
     runtime.shutDown();
-    assert(runtime.currentContext is null);
+    assert(runtime.injector is null);
 }

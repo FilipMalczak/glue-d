@@ -1,4 +1,5 @@
-module glued.context.bundles;
+//todo this should be "assets"
+module glued.adhesives.bundles;
 
 import std.algorithm;
 import std.range;
@@ -30,6 +31,7 @@ interface Asset {
     //todo size
 }
 
+//todo this should be AssetBundle
 interface Bundle {
     Asset[] ls(); //fixme registrar performs ls lazily (with auto) while this requires array result
 

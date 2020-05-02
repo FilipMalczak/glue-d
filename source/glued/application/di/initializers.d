@@ -1,4 +1,4 @@
-module glued.context.di.initializers;
+module glued.application.di.initializers;
 
 import std.meta;
 import std.traits;
@@ -6,7 +6,7 @@ import std.traits;
 import glued.annotations;
 import glued.logging;
 
-import glued.context.di.annotations;
+import glued.application.di.annotations;
 
 import dejector;
 

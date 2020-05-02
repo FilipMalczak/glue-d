@@ -1,10 +1,16 @@
 module glued.application.impl;
 
+import std.range;
+
 import glued.logging;
-import glued.context;
 
+import glued.codescan;
+
+import glued.application.scanlisteners;
 import glued.application.logging;
+import glued.adhesives;
 
+import dejector;
 
 interface ApplicationAction {
     void execute();
@@ -18,21 +24,26 @@ class GluedRuntime(alias scannables) {
     mixin CreateLogger;
     Logger log;
 
-    private DefaultGluedContext context;
+    private Dejector _injector;
 
     void start(string[] cmdLineArgs){
         DeferredLogSink sink = new DeferredLogSink;
         log = Logger(sink);
-        log.debug_.emit("Initialized deferred log sink, setting up context");
-        context = new DefaultGluedContext(sink); //todo you really need to clean up the processors abstraction...
-        log.debug_.emit("Context ready, scanning: ", scannables);
-        context.scan!scannables();
-        context.freeze(); //todo this will happen in different moment when we compose scannables from annotations
+        log.debug_.emit("Initialized deferred log sink");
+        log.debug_.emit("Setting up DI facilities");
+        _injector = new Dejector;
+        _injector.bind!(LogSink)(new InstanceProvider(sink));
+        auto scanner = new CodebaseScanner!(Dejector, GluedAppListeners)(_injector, sink);
+        log.debug_.emit("Scanning: ", scannables);
+        scanner.scan!scannables();
+        log.debug_.emit("Scan finished, freezing application state");
+        scanner.freeze(); //todo this will happen in different moment when we compose scannables from annotations
 //        instantiateComponents(); //todo do this once you index types by stereotypes
 //interface StereotypedInstance(S) {prop S stereotype, prop Object instance}
 //interface StereotypeDescriptor{ prop string stereotypeTypeName }
-        log.debug_.emit("Scan finished");
+        log.debug_.emit("Resolving log sink based on loaded configuration");
         resolveLogSink(sink); //todo if there is exception before this step, turn off any filtering (maybe keep buildLog.conf), flush to stderr, then let the failure propagate (so we can investigate, but with logs)
+        log.debug_.emit("Running application actions");
         runActions();
         log.info.emit("Runtime started");
     }
@@ -42,29 +53,37 @@ class GluedRuntime(alias scannables) {
     }
     
     private void runActions(){
-        InterfaceResolver resolver = context.get!InterfaceResolver;
+        InterfaceResolver resolver = _injector.get!InterfaceResolver;
         auto actions = resolver.getImplementations!(ApplicationAction)();
-        log.debug_.emit("Found ", actions.length, " actions to execute");
-        foreach(a; actions){ //todo make optionally parallel via glued.app.actions.parallel
-            a.execute();
+        if (!actions.empty) {
+            log.debug_.emit("Found ", actions.length, " actions to execute");
+            foreach(a; actions){ //todo make optionally parallel via glued.app.actions.parallel
+                a.execute();
+            }
+        } else {
+            log.debug_.emit("No actions found");
         }
     }
     
     @property
-    auto currentContext(){
-        return context; //todo optional?
+    auto injector(){
+        return _injector; //todo optional?
     }
     
     void shutDown(){
         log.debug_.emit("Shutdown started");
-        InterfaceResolver resolver = context.get!InterfaceResolver;
+        InterfaceResolver resolver = _injector.get!InterfaceResolver;
         
         ShutdownHandler[] handlers = resolver.getImplementations!ShutdownHandler;
-        log.debug_.emit("Found ", handlers.length, " shutdown handlers");
-        foreach(h; handlers){ //todo ditto
-            h.onShutdown();
+        if (!handlers.empty) {
+            log.debug_.emit("Found ", handlers.length, " shutdown handlers");
+            foreach(h; handlers){ //todo ditto
+                h.onShutdown();
+            }
+        } else {
+            log.debug_.emit("No shutdown handlers found");
         }
-        context = null;
+        _injector = null;
         log.info.emit("Runtime shut down");
     }
 }

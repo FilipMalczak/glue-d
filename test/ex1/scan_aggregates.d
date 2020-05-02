@@ -1,6 +1,6 @@
 module ex1.scan_aggregates;
 
-import glued.stereotypes;
+import glued.application.stereotypes;
 
 @Tracked
 class X {
@@ -17,8 +17,14 @@ class Y {}
 @Ster @Component
 class Z {}
 
-//fixme what the hell? if its here, its alright, if its in the other module, it fails oO
-//see: ./enum_.d
-//enum NonTrackedBecauseEnum;
+
+enum IgnoredEnum;
+
+enum AnotherIgnored: int;
+
+enum NonTrackedEnum { X, Y }
+
+@Tracked
+enum TrackedEnum {YAY}
 
 struct NonTrackedStruct {}

@@ -35,7 +35,8 @@ class CodebaseScanner(State, Listeners...)
     { 
         //todo assert not frozen
         //todo if we move these into private methods, we can log.trace whats going on
-        enum typeConsumer(string m, string n) = "listener.onType!(import_!(\""~m~"\", \""~n~"\"))();";
+//        enum typeConsumer(string m, string n) = "listener.onType!(import_!(\""~m~"\", \""~n~"\"))();";
+        enum typeConsumer(string m, string n) = "onType!(\""~m~"\", \""~n~"\")();";
         enum bundleConsumer(string modName) = "listener.onBundleModule!(\""~modName~"\")();";
         
         mixin unrollLoopThrough!(scannable, "void doScan() { ", typeConsumer, bundleConsumer, "}");
@@ -43,6 +44,11 @@ class CodebaseScanner(State, Listeners...)
         log.info.emit("Scanning ", scannable);
         doScan();
         log.info.emit("Scan of ", scannable, " finished");
+    }
+    
+    private void onType(string m, string n)(){
+        alias T = import_!(m, n);
+        listener.onType!T();
     }
     
     void freeze(){

@@ -1,4 +1,4 @@
-module glued.context.typeindex;
+module glued.adhesives.typeindex;
 
 import std.array;
 import std.algorithm.iteration;
@@ -31,10 +31,13 @@ class InheritanceIndex {
 
     void markExists(string query, TypeKind kind){
         log.debug_.emit(query, " is of kind ", kind);
-        if (query in kinds){
+        if (query in kinds)
+        {
             assert(kinds[query] == kind); //todo better exception
             log.debug_.emit("Checks out with previous knowledge");
-        } else {
+        } 
+        else 
+        {
             kinds[query] = kind;
             log.debug_.emit("That's new knowledge");
         }

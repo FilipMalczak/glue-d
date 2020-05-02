@@ -5,7 +5,7 @@ import std.typecons;
 
 import glued.codescan.scannable;
 
-interface Listener(State) 
+interface ScanListener(State) 
 {
     void init(State state);
 
@@ -18,7 +18,7 @@ interface Listener(State)
     void onScannerFreeze();
 }
 
-class CompositeListener(State, Listeners...): Listener!State  
+class CompositeListener(State, Listeners...): ScanListener!State  
 //    if (allSatisfy!(L => is(L: Listener!State) && __traits(compiles, new L()), Listeners)) //todo
 {
     private Tuple!(AliasSeq!(Listeners)) listeners;

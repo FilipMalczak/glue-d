@@ -1,10 +1,10 @@
-module glued.context.config;
+module glued.adhesives.config;
 
 import std.algorithm;
 
 import glued.pathtree;
 
-import glued.context.bundles;
+import glued.adhesives.bundles;
 
 import optional;
 import properd;

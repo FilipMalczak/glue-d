@@ -1,4 +1,4 @@
-module glued.stereotypes;
+module glued.application.stereotypes;
 
 import std.meta;
 

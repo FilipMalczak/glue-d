@@ -1,6 +1,5 @@
 module glued.testsuites.codescan.unroll_with_externally_defined;
 
-import std.stdio;
 import std.traits;
 
 import std.algorithm.searching;

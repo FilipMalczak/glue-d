@@ -1,4 +1,4 @@
-module glued.context.resolveCall;
+module glued.application.di.resolveCall;
 
 import std.traits: moduleName, fullyQualifiedName;
 import std.array: join;

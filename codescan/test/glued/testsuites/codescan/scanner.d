@@ -27,7 +27,7 @@ class AllColectionResults {
     }
 }
 
-class AllCollectingListener: Listener!(AllColectionResults) 
+class AllCollectingListener: ScanListener!(AllColectionResults) 
 {
     AllColectionResults results = null;
 
@@ -203,7 +203,7 @@ class ByKindResults
     bool frozen = false;
 }
 
-class ScannableListener: Listener!ByKindResults 
+class ScannableListener: ScanListener!ByKindResults 
 {
     ByKindResults results = null;
 
@@ -230,7 +230,7 @@ class ScannableListener: Listener!ByKindResults
     }
 }
 
-class TypeListener: Listener!ByKindResults 
+class TypeListener: ScanListener!ByKindResults 
 {
     ByKindResults results = null;
 
@@ -257,7 +257,7 @@ class TypeListener: Listener!ByKindResults
     }
 }
 
-class BundleListener: Listener!ByKindResults 
+class BundleListener: ScanListener!ByKindResults 
 {
     ByKindResults results = null;
 
@@ -284,7 +284,7 @@ class BundleListener: Listener!ByKindResults
     }
 }
 
-class FreezeListener: Listener!ByKindResults 
+class FreezeListener: ScanListener!ByKindResults 
 {
     ByKindResults results = null;
 
