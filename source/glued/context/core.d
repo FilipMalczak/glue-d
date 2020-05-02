@@ -7,7 +7,7 @@ import std.range;
 
 import glued.stereotypes;
 import glued.mirror;
-import glued.scan;
+import glued.codescan.unrollscan;
 import glued.logging;
 
 import glued.context.typeindex: InheritanceIndex;
@@ -87,19 +87,20 @@ class GluedContext(Processors...) {
         processor.afterScan();
     }
 
-    void scan(alias scannables)(){
+    void scan(alias scannable)() if (isScannable!scannable)
+    {
         //todo exception if frozen
         enum scanConsumer(string m, string n) = "track!(\""~m~"\", \""~n~"\")();";
         enum bundleConsumer(string modName) = "trackBundle!(\""~modName~"\")();";
         
-        mixin unrollLoopThrough!(scannables, "void doScan() { ", scanConsumer, bundleConsumer, "}");
-        log.info.emit("Before ", scannables);
+        mixin unrollLoopThrough!(scannable, "void doScan() { ", scanConsumer, bundleConsumer, "}");
+        log.info.emit("Before ", scannable);
         beforeScan();
-        log.info.emit("Scanning ", scannables);
+        log.info.emit("Scanning ", scannable);
         doScan();
-        log.info.emit("After ", scannables);
+        log.info.emit("After ", scannable);
         afterScan();
-        log.info.emit("Scan of ", scannables, " finished");
+        log.info.emit("Scan of ", scannable, " finished");
     }
     
     void freeze(){

@@ -1,4 +1,4 @@
-module glued.scannable;
+module glued.codescan.scannable;
 
 import std.string;
 import std.traits;
@@ -26,6 +26,11 @@ struct Scannable {
     Scannable withRoot(string r){
         return Scannable(r, qualifier, testQualifier);
     }
+    
+    @property
+    string reprForMixin(){
+        return typeof(this).stringof~"("~root~", "~qualifier~", "~testQualifier~")";
+    }
 }
 
 enum isScannable(alias s) = is(typeof(s) == Scannable);
@@ -46,6 +51,4 @@ Scannable fromRoot(string moduleName, string qualifier="", string testQualifier=
 }
 
 enum fromRoot(T, string qualifier="", string testQualifier="test") = fromRoot(moduleName!T, qualifier, testQualifier);
-
-enum fromRoot(string qualifier="", string testQualifier="test", string foo=__FUNCTION__) = from(foo, qualifier, testQualifier);
 

@@ -1,6 +1,6 @@
 module glued.context.processors.api;
 
-public import glued.scannable: Scannable, isScannable;
+public import glued.codescan.scannable: Scannable, isScannable;
 
 import glued.logging: LogSink;
 

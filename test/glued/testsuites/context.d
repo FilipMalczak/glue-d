@@ -6,7 +6,7 @@ import std.meta;
 import std.algorithm;
 
 import glued.context;
-import glued.scannable;
+import glued.codescan.scannable;
 import glued.logging;
 import glued.utils;
 
@@ -16,7 +16,7 @@ import glued.set;
 unittest {
     auto d = new DefaultGluedContext(new StdoutSink);
 
-    d.scan!([at("ex1")])();
+    d.scan!(at("ex1"))();
 
     import ex1.scan_aggregates: Z;
     Z inst = d.injector.get!Z;
@@ -26,7 +26,7 @@ unittest {
 
 unittest {
     auto d = new DefaultGluedContext(new StdoutSink);
-    d.scan!([at("foo")])();
+    d.scan!(at("foo"))();
     writeln("scan finished");
     import foo.api;
     Api api = d.injector.get!Api;
@@ -46,7 +46,7 @@ unittest {
 unittest {
     import std.stdio;
     auto d = new DefaultGluedContext(new StdoutSink);
-    d.scan!([at("foo")])();
+    d.scan!(at("foo"))();
     writeln("scan finished");
     import foo.api;
     Api api = d.injector.get!Api;
@@ -65,7 +65,7 @@ unittest {
 unittest {
     import std.stdio;
     auto d = new DefaultGluedContext(new StdoutSink);
-    d.scan!([at("ex3")])();
+    d.scan!(at("ex3"))();
     writeln("scan finished");
     import ex3.mod;
     InterfaceResolver resolver = d.injector.get!InterfaceResolver;

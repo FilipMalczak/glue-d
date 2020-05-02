@@ -228,6 +228,11 @@ class StdoutSink: LogSink {
     }
 }
 
+///No-op sink, usually used as a default param value
+class VoidSink: LogSink {
+    override void consume(LogEvent e){}
+}
+
 /**
  * if p="a.b!(c.d).e", then segments = ["a", "b!(c", "d)", "e"]
  * this foo turns that back to ["a", "b!(c.d)", "e"]
