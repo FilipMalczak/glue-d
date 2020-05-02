@@ -23,6 +23,13 @@ class CodebaseScanner(State, Listeners...)
         listener.init(initialState);
     }
     
+    void scan(scannables...)() 
+    {
+        static foreach (s; scannables){
+            scan!s();
+        }
+    }
+    
     void scan(alias scannable)()
         if (isScannable!(scannable))
     { 
