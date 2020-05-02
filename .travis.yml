@@ -2,6 +2,7 @@ language: d
 
 install:
  - "./clean.sh"
+ - "dub run glue-d:codescan --config=indexer --compiler=${DC}"
  - "dub run --config=indexer --compiler=${DC}"
 
 script:
