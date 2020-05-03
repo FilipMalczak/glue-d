@@ -219,7 +219,10 @@ bool generateBundle(SourceSet sourceSet, DirEntry d){
             auto path = to!string(chainPath(d.name, f));
             version(Windows)
             {
-                    path = path.replace("\\", "/");
+                //https://github.com/dlang/dmd/pull/6739#issue-118364974
+                //apparently on Windows we cannot import files that have backslash
+                //in path, but we still can use simple slash
+                path = path.replace("\\", "/");
             }
             bundleFile.writeln("        result[\""~f~"\"] = import(\""~path~"\");");
         }

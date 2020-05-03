@@ -129,7 +129,6 @@ build_script:
   - dub clean
   - ps: $env:dubFlags = "--arch=%Darch% --compiler=%DC%" 
   - dub run --config=indexer %dubFlags%
-  - ps: type test\bundles\content\onlysubpkgs\_test_bundle.d
 
 test_script:
   - dub test glue-d:annotations %dubFlags%

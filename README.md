@@ -17,27 +17,32 @@ Heavily inspired by Spring.
 
 ## Status
 
+On Unix-like systems we build with latest compiler versions ([see details](https://docs.travis-ci.com/user/languages/d/), 
+we don't specify version explicitly in the configuration).
+
+**GDC is explicitly not supported.**
+
+Unfortunately, AppVeyor doesn't support per-job badges (at least [yet](https://github.com/appveyor/ci/issues/1805)).
+We build our project with DMD (stable) on `x86` and `x64` and LDC (stable) on `x64`.
+
 ### `master`
 
 Really old, basically useless. Tagged just so that we have presence on dub.
 
-### `dev` 
+### `dev`
 
 [![codecov](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev/graph/badge.svg)](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev)
 [![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?label=TravisCI)](https://travis-ci.org/FilipMalczak/glue-d/branches) 
-
-AppVeyor: _coming soon, hold on to your hat_
+[![dev status](https://ci.appveyor.com/api/projects/status/v4rff987qgocuxmf/branch/dev?svg=true)](https://ci.appveyor.com/project/FilipMalczak/glue-d/branch/dev)
 
 Detailed status:
-
-> these show status on `ci-build-matrix` branch; change it after merge
-
 * ![xenial with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=xenial_dmd&label=Ubuntu%20Xenial%20with%20dmd)
 * ![bionic with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=bionic_dmd&label=Ubuntu%20Bionic%20with%20dmd)
 * ![osx with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=osx_dmd&label=OSX%20with%20dmd)
 * ![xenial with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=xenial_ldc&label=Ubuntu%20Xenial%20with%20ldc)
 * ![bionic with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=bionic_ldc&label=Ubuntu%20Bionic%20with%20ldc)
 * ![osx with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=osx_ldc&label=OSX%20with%20ldc)
+
  
 ## ToDo
  
