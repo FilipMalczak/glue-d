@@ -22,5 +22,5 @@ script:
  - "dub test -b unittest-cov --compiler=${DC}"
 after_success:
  # upload coverage only on linux/dmd (to minimize confusion)
- - [ "$DC" == "dmd" && "$TRAVIS_OS_NAME" == "linux"] && bash <(curl -s https://codecov.io/bash)
+ - '[ "$DC" == "dmd" && "$TRAVIS_OS_NAME" == "linux"] && bash <(curl -s https://codecov.io/bash)'
 
