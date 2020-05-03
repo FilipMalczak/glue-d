@@ -1,15 +1,39 @@
 language: d
 
-os:
-  - linux
-  - osx
+#os:
+#  - linux
+#  - osx
 
-#todo use some specific version of each, but also latest and nightly (this is gonna be a huge matrix)
-d:
-  - dmd
-  - ldc
+##todo use some specific version of each, but also latest and nightly (this is gonna be a huge matrix)
+#d:
+#  - dmd
+#  - ldc
   # GDC is explicitly not supported
-  
+
+jobs:
+  include:
+    - os: linux
+      dist: xenial
+      d: dmd
+      env: CI_CONTEXT=xenial_dmd
+    - os: linux
+      dist: bionic
+      d: dmd
+      env: CI_CONTEXT=bionic_dmd
+    - os: osx
+      d: dmd
+      env: CI_CONTEXT=osx_dmd
+    - os: linux
+      dist: xenial
+      d: ldc
+      env: CI_CONTEXT=xenial_ldc
+    - os: linux
+      dist: bionic
+      d: ldc
+      env: CI_CONTEXT=bionic_ldc
+    - os: osx
+      d: ldc
+      env: CI_CONTEXT=osx_ldc
 
 install:
  - ./clean.sh
@@ -22,5 +46,5 @@ script:
  - "dub test -b unittest-cov --compiler=${DC}"
 after_success:
  # upload coverage only on linux/dmd (to minimize confusion)
- - '[ "$DC" == "dmd" && "$TRAVIS_OS_NAME" == "linux"] && bash <(curl -s https://codecov.io/bash)'
+ - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash)'
 
