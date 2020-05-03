@@ -216,7 +216,13 @@ bool generateBundle(SourceSet sourceSet, DirEntry d){
         bundleFile.writeln("    private static string[string] loadBundle(){ ");
         bundleFile.writeln("        string[string] result;");
         foreach (f; toBundle){
-            bundleFile.writeln("        result[\""~f~"\"] = import(\""~to!string(chainPath(d.name, f))~"\");");
+            auto path = to!string(chainPath(d.name, f));
+            version(Windows)
+            {
+                if (pathSeparator == "\\")
+                    path = path.replace("\\", "\\\\");
+            }
+            bundleFile.writeln("        result[\""~f~"\"] = import(\""~path~"\");");
         }
         bundleFile.writeln("        return result;");
         bundleFile.writeln("    }");
