@@ -3,6 +3,14 @@ language: d
 os:
   - linux
   - osx
+  - windows
+
+# use some specific version of each, but also latest and nightly (this is gonna be a huge matrix)
+d:
+  - dmd
+  - gdc
+  - ldc
+  
 
 install:
  - "./clean.sh"
