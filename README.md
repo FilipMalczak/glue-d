@@ -21,11 +21,10 @@ Heavily inspired by Spring.
 
 Really old, basically useless. Tagged just so that we have presence on dub.
 
-### `dev`
-
-[![codecov](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev/graph/badge.svg)](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev)
+### `dev` [![codecov](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev/graph/badge.svg)](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev)
 
 TravisCI: [![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?label=dev)](https://travis-ci.org/FilipMalczak/glue-d/branches) 
+
 AppVeyor: _coming soon, hold on to your hat_
 
 Detailed status:
