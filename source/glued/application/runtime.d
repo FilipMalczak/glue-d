@@ -1,4 +1,4 @@
-module glued.application.impl;
+module glued.application.runtime;
 
 import std.range;
 
@@ -26,7 +26,7 @@ class GluedRuntime(alias scannables) {
 
     private Dejector _injector;
 
-    void start(string[] cmdLineArgs){
+    void start(string[] cmdLineArgs=[]){
         DeferredLogSink sink = new DeferredLogSink;
         log = Logger(sink);
         log.debug_.emit("Initialized deferred log sink");
