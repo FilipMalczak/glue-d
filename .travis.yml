@@ -1,15 +1,6 @@
 language: d
 
-#os:
-#  - linux
-#  - osx
-
-##todo use some specific version of each, but also latest and nightly (this is gonna be a huge matrix)
-#d:
-#  - dmd
-#  - ldc
-  # GDC is explicitly not supported
-
+##todo use some specific version of dmd/ldc, but also latest and nightly (this is gonna be a huge matrix)
 jobs:
   include:
     - os: linux
