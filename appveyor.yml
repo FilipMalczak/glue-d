@@ -134,12 +134,12 @@ build_script:
   - echo %Darch%
   - echo %DC%
   - echo %DMD%
- - dub clean
- - ps: $env:dubFlags = "--arch=%Darch% --compiler=%DC%" 
- - dub run --config=indexer %dubFlags%
+  - dub clean
+  - ps: $env:dubFlags = "--arch=%Darch% --compiler=%DC%" 
+  - dub run --config=indexer %dubFlags%
 
 test_script:
- - dub test glue-d:annotations %dubFlags%
- - dub test glue-d:logging %dubFlags%
- - dub test glue-d:utils %dubFlags%
- - dub test %dubFlags%
+  - dub test glue-d:annotations %dubFlags%
+  - dub test glue-d:logging %dubFlags%
+  - dub test glue-d:utils %dubFlags%
+  - dub test %dubFlags%
