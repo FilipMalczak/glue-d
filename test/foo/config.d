@@ -1,6 +1,6 @@
 module foo.config;
 
-import glued.context.annotations;
+import glued.application;
 
 import foo.operators;
 

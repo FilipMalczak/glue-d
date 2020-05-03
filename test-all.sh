@@ -11,8 +11,15 @@ fi
 set -ex
 
 dub test glue-d:utils $CONFIG
+
 dub test glue-d:logging $CONFIG
+
 dub test glue-d:annotations $CONFIG
-#indexer is tested in main module
+
+# codescan uses custom test qualifier
+dub run glue-d:codescan --config=indexer
+dub test glue-d:codescan $CONFIG
+
+# main module uses default qualifiers
 dub run --config=indexer $CONFIG
 dub test $CONFIG

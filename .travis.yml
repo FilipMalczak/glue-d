@@ -27,12 +27,14 @@ jobs:
       env: CI_CONTEXT=osx_ldc
 
 install:
- - ./clean.sh
+ - "./clean.sh"
+ - "dub run glue-d:codescan --config=indexer --compiler=${DC}"
  - "dub run --config=indexer --compiler=${DC}"
 
 #todo in setups other than xenial/dmd there is no point in using -b unittest-cov
 script:
  - "dub test glue-d:annotations -b unittest-cov --compiler=${DC}"
+ - "dub test glue-d:codescan -b unittest-cov --compiler=${DC}"
  - "dub test glue-d:logging -b unittest-cov --compiler=${DC}"
  - "dub test glue-d:utils -b unittest-cov --compiler=${DC}"
  - "dub test -b unittest-cov --compiler=${DC}"

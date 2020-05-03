@@ -1,6 +1,6 @@
 module glued.testsuites.stereotypes;
 
-import glued.stereotypes;
+import glued.application.stereotypes;
 
 struct NonStereotype {}
 

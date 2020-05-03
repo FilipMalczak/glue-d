@@ -5,7 +5,7 @@ import std.array;
 
 import glued.logging;
 import glued.application;
-import glued.context;
+import glued.adhesives;
 import glued.set;
 
 import apps.app1.deps;

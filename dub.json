@@ -27,8 +27,8 @@
 		"glue-d:annotations": ">=0.0.0",
 		"glue-d:logging": ">=0.0.0",
 		"glue-d:utils": ">=0.0.0",
+		"glue-d:codescan": ">=0.0.0",
 		"glue-dejector": ">=0.3.1",
-		"mirror": "~>0.1.9",
 		"optional": "~>1.0.0",
 		"unit-threaded": "~>0.10.8"
 	},
@@ -40,6 +40,7 @@
 	"name": "glue-d",
 	"subPackages": [
 		"./indexer/",
+		"./codescan/",
 		"./utils/",
 		"./logging/",
 		"./annotations/"

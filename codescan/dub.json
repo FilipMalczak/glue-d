@@ -1,0 +1,39 @@
+{
+    "authors": [
+        "Filip Malczak"
+    ],
+    "copyright": "Copyright © 2019, Filip Malczak",
+    "description": "Facilities used to generate scan of the available codebase once its indexed",
+    "license": "Apache 2.0",
+    "name": "codescan",
+    "dependencies": {
+        "glue-d:utils": "*",
+        "glue-d:logging": "*",
+        "optional": "~>1.0.0",
+        "unit-threaded": "~>0.10.8"
+    },
+    "targetType": "library",
+    "configurations": [
+        {
+            "name": "unittest",
+            "sourcePaths": [
+                "test"
+            ],
+            "targetType": "executable"
+        },
+		{
+			"dependencies": {
+				"glue-d:indexer": ">=0.0.0"
+			},
+			"mainSourceFile": "index_entrypoint.d",
+			"name": "indexer",
+			"sourceFiles": [
+				"index_entrypoint.d"
+			],
+			"targetType": "executable"
+		}
+    ],
+    "dflags": [
+        "-J."
+    ]
+}
