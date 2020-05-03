@@ -36,12 +36,12 @@ Really old, basically useless. Tagged just so that we have presence on dub.
 [![dev status](https://ci.appveyor.com/api/projects/status/v4rff987qgocuxmf/branch/dev?svg=true)](https://ci.appveyor.com/project/FilipMalczak/glue-d/branch/dev)
 
 Detailed status:
-* ![xenial with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=xenial_dmd&label=Ubuntu%20Xenial%20with%20dmd)
-* ![bionic with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=bionic_dmd&label=Ubuntu%20Bionic%20with%20dmd)
-* ![osx with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=osx_dmd&label=OSX%20with%20dmd)
-* ![xenial with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=xenial_ldc&label=Ubuntu%20Xenial%20with%20ldc)
-* ![bionic with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=bionic_ldc&label=Ubuntu%20Bionic%20with%20ldc)
-* ![osx with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=osx_ldc&label=OSX%20with%20ldc)
+* ![xenial with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=dev&env=CI_CONTEXT=xenial_dmd&label=Ubuntu%20Xenial%20with%20dmd)
+* ![bionic with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=dev&env=CI_CONTEXT=bionic_dmd&label=Ubuntu%20Bionic%20with%20dmd)
+* ![osx with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=dev&env=CI_CONTEXT=osx_dmd&label=OSX%20with%20dmd)
+* ![xenial with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=dev&env=CI_CONTEXT=xenial_ldc&label=Ubuntu%20Xenial%20with%20ldc)
+* ![bionic with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=dev&env=CI_CONTEXT=bionic_ldc&label=Ubuntu%20Bionic%20with%20ldc)
+* ![osx with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=dev&env=CI_CONTEXT=osx_ldc&label=OSX%20with%20ldc)
 
  
 ## ToDo
