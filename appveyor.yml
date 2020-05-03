@@ -2,23 +2,15 @@ platform: x64
 environment:
  matrix:
   - DC: dmd
-    DVersion: 2.071.0
+    DVersion: stable
     arch: x64
   - DC: dmd
-    DVersion: 2.071.0
-    arch: x86
-  - DC: dmd
-    DVersion: 2.070.0
-    arch: x64
-  - DC: dmd
-    DVersion: 2.070.0
+    DVersion: stable
     arch: x86
   - DC: ldc
-    DVersion: 1.0.0
+    DVersion: stable
     arch: x64
-  - DC: ldc
-    DVersion: 0.17.0
-    arch: x64
+#todo ldc/x86?
 
 install:
   - ps: function ResolveDMD
