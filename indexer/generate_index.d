@@ -219,7 +219,8 @@ bool generateBundle(SourceSet sourceSet, DirEntry d){
             auto path = to!string(chainPath(d.name, f));
             version(Windows)
             {
-                if (pathSeparator == "\\")
+                writeln("On windows!");
+//                if (pathSeparator == "\\")
                     path = path.replace("\\", "\\\\");
             }
             bundleFile.writeln("        result[\""~f~"\"] = import(\""~path~"\");");
