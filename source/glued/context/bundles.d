@@ -89,7 +89,7 @@ class GluedBundle(string modName): Bundle {
         return "glue";
     }
     
-    enum directoryName = modName.split(".")[0..$-1].join(dirSeparator);
+    enum directoryName = modName.split(".")[0..$-1].join("/");
     
     mixin("import "~modName~";");
     alias def = BundleDefinition;
@@ -107,7 +107,7 @@ class GluedBundle(string modName): Bundle {
     }
     
     Asset[] ls() {
-        return backend.keys().map!(x => cast(Asset) find(directoryName~dirSeparator~x).front()).array;
+        return backend.keys().map!(x => cast(Asset) find(directoryName~"/"~x).front()).array;
     }
 }
 
@@ -146,6 +146,10 @@ class DirectoryBundle: Bundle {
     private string dirPath;
     
     this(string path){
+        version(Windows)
+        {
+            path = path.replace("\\", "/");
+        }
         assert(path.exists && path.isDir); //todo exception
         dirPath = path;
     }
