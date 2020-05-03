@@ -3,7 +3,6 @@ language: d
 os:
   - linux
   - osx
-  - windows #fixme
 
 #todo use some specific version of each, but also latest and nightly (this is gonna be a huge matrix)
 d:
@@ -13,7 +12,8 @@ d:
   
 
 install:
- - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./clean.sh; else echo "WIN"; fi
+  - printenv
+# - ./clean.sh
 # - "dub run --config=indexer --compiler=${DC}"
 
 #script:
