@@ -32,7 +32,7 @@ Really old, basically useless. Tagged just so that we have presence on dub.
 ### `dev`
 
 [![codecov](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev/graph/badge.svg)](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev)
-[![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?logo=travisci)](https://travis-ci.org/FilipMalczak/glue-d/branches) 
+[![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?logo=travis)](https://travis-ci.org/FilipMalczak/glue-d/branches) 
 [![dev status](https://ci.appveyor.com/api/projects/status/v4rff987qgocuxmf/branch/dev?svg=true)](https://ci.appveyor.com/project/FilipMalczak/glue-d/branch/dev)
 
 Detailed status:
