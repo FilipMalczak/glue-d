@@ -134,7 +134,7 @@ before_build:
   - echo %DC%
   - echo %DMD%
 
-install:
+before_test:
  - dub clean %dubFlags% 
  - dub run --config=indexer %dubFlags%
 
