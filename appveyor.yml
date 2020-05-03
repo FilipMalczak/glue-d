@@ -128,15 +128,18 @@ before_build:
         }
   - ps: $env:compilersetup = "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall";
   - '"%compilersetup%" %compilersetupargs%'
-  - ps: $env:dubFlags = "--arch=%Darch% --compiler=%DC%"
+  - ps: $env:dubFlags = "--arch=%Darch% --compiler=%DC%" 
+  - echo %PLATFORM%
+  - echo %Darch%
+  - echo %DC%
+  - echo %DMD%
 
-build_script:
- - echo does it even work?
+install:
+ - dub clean %dubFlags% 
+ - dub run --config=indexer %dubFlags%
 
 test_script:
- - echo %PLATFORM%
- - echo %Darch%
- - echo %DC%
- - echo %DMD%
- - echo %PATH%
- - dub %dubFlags% --version
+ - dub test glue-d:annotations %dubFlags%
+ - dub test glue-d:logging %dubFlags%
+ - dub test glue-d:utils %dubFlags%
+ - dub test %dubFlags%

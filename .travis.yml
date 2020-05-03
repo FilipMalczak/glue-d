@@ -30,6 +30,7 @@ install:
  - ./clean.sh
  - "dub run --config=indexer --compiler=${DC}"
 
+#todo in setups other than xenial/dmd there is no point in using -b unittest-cov
 script:
  - "dub test glue-d:annotations -b unittest-cov --compiler=${DC}"
  - "dub test glue-d:logging -b unittest-cov --compiler=${DC}"
