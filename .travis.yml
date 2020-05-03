@@ -1,5 +1,9 @@
 language: d
 
+os:
+  - linux
+  - osx
+
 install:
  - "./clean.sh"
  - "dub run --config=indexer --compiler=${DC}"
