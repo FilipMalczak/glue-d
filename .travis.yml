@@ -5,7 +5,7 @@ os:
   - osx
   #- windows #fixme
 
-# use some specific version of each, but also latest and nightly (this is gonna be a huge matrix)
+#todo use some specific version of each, but also latest and nightly (this is gonna be a huge matrix)
 d:
   - dmd
   - ldc
