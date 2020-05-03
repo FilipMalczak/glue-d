@@ -1,9 +1,6 @@
 # glue-d
- 
-> master: [![master status](https://img.shields.io/travis/FilipMalczak/glue-d/master?label=master)](https://travis-ci.org/FilipMalczak/glue-d/branches) [![codecov](https://codecov.io/gh/FilipMalczak/glue-d/branch/master/graph/badge.svg)](https://codecov.io/gh/FilipMalczak/glue-d/branch/master)
->
-> dev: [![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?label=dev)](https://travis-ci.org/FilipMalczak/glue-d/branches) [![codecov](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev/graph/badge.svg)](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev)
 
+## What is it?
  
 Bunch of different D-lang tools glued together with some sprinkles on top.
  
@@ -17,6 +14,30 @@ etc.
 Next integrations will probably include vibe-d and maybe some data drivers.
  
 Heavily inspired by Spring.
+
+## Status
+
+### `master`
+
+Really old, basically useless. Tagged just so that we have presence on dub.
+
+### `dev`
+
+[![codecov](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev/graph/badge.svg)](https://codecov.io/gh/FilipMalczak/glue-d/branch/dev)
+
+TravisCI: [![dev status](https://img.shields.io/travis/FilipMalczak/glue-d/dev?label=dev)](https://travis-ci.org/FilipMalczak/glue-d/branches) 
+AppVeyor: _coming soon, hold on to your hat_
+
+Detailed status:
+
+> these show status on `ci-build-matrix` branch; change it after merge
+
+* ![xenial with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=xenial_dmd&label=Ubuntu%20Xenial%20with%20dmd)
+* ![bionic with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=bionic_dmd&label=Ubuntu%20Bionic%20with%20dmd)
+* ![osx with dmd](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=osx_dmd&label=OSX%20with%20dmd)
+* ![xenial with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=xenial_ldc&label=Ubuntu%20Xenial%20with%20ldc)
+* ![bionic with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=bionic_ldc&label=Ubuntu%20Bionic%20with%20ldc)
+* ![osx with ldc](https://badges.herokuapp.com/travis/FilipMalczak/glue-d?branch=ci-build-matrix&env=CI_CONTEXT=osx_ldc&label=OSX%20with%20ldc)
  
 ## ToDo
  
