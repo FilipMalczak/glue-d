@@ -12,15 +12,15 @@ d:
   
 
 install:
-  - printenv
-# - ./clean.sh
-# - "dub run --config=indexer --compiler=${DC}"
+ - ./clean.sh
+ - "dub run --config=indexer --compiler=${DC}"
 
-#script:
-# - "dub test glue-d:annotations -b unittest-cov --compiler=${DC}"
-# - "dub test glue-d:logging -b unittest-cov --compiler=${DC}"
-# - "dub test glue-d:utils -b unittest-cov --compiler=${DC}"
-# - "dub test -b unittest-cov --compiler=${DC}"
-#after_success:
-# - bash <(curl -s https://codecov.io/bash)
+script:
+ - "dub test glue-d:annotations -b unittest-cov --compiler=${DC}"
+ - "dub test glue-d:logging -b unittest-cov --compiler=${DC}"
+ - "dub test glue-d:utils -b unittest-cov --compiler=${DC}"
+ - "dub test -b unittest-cov --compiler=${DC}"
+after_success:
+ # upload coverage only on linux/dmd (to minimize confusion)
+ - [ "$DC" == "dmd" && "$TRAVIS_OS_NAME" == "linux"] && bash <(curl -s https://codecov.io/bash)
 
