@@ -2,7 +2,8 @@ module glued.adhesives.config;
 
 import std.algorithm;
 
-import glued.pathtree;
+public import glued.pathtree;
+import glued.logging;
 
 import glued.adhesives.bundles;
 
@@ -16,11 +17,21 @@ struct ConfigEntry {
     Asset source;
 }
 
+//todo Environment seems more natural
 //todo would this gain anything from making previous value versions visible or reachable?
 class Config {
+    //todo CreateLogger -> DefineLogger; CreateLogger(name) = DefineLogger + Logger <name>
+    mixin CreateLogger;
+    Logger log;
+    
+    this(LogSink sink){
+        log = Logger(sink);
+    }
+    
     private PathTree!ConfigEntry backend = new ConcretePathTree!ConfigEntry();
     
     void feed(Asset asset){
+        log.debug_.emit("Feeding config from ", asset);
         auto aa = parseProperties(asset.content);
         foreach(k; aa.keys()){
             backend.put(k, ConfigEntry(aa[k], asset));
@@ -28,6 +39,11 @@ class Config {
     }
     
     //todo introduce interface ViewClosure(Result), normalize all closures, e.g. ValuesClosure: ViewClosure!string?
+    
+    @property
+    PathTreeView!ConfigEntry view(){
+        return backend;
+    }
     
     struct ValuesClosure {
         private Config config;

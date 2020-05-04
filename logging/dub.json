@@ -18,7 +18,8 @@
             "sourcePaths": [
                 "test"
             ],
-            "targetType": "executable"
+            "targetType": "executable",
+            "dflags": [ "-J." ]
         }
     ]
 }

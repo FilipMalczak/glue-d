@@ -6,6 +6,10 @@ import std.range;
 
 import optional;
 
+size_t depth(string path){
+    return path.split("/").length;
+}
+
 /**
  * Generalization of the idea of a read-only text file.
  */
@@ -178,6 +182,75 @@ class DirectoryBundle: Bundle {
     }
 }
 
+class BuildTimeAsset(string name): Asset {
+    @property 
+    string scheme(){
+        return "build";
+    }
+    
+    @property
+    string path(){
+        return name;
+    }
+    
+    @property
+    string content(){
+        return import(name);
+    }
+}
+
+version(unittest) 
+{
+    enum buildTimeAssetNames = ["buildLog.conf", "build.conf", "app.conf", "buildLog.test.conf", "build.test.conf", "app.test.conf"];
+} 
+else
+{
+    enum buildTimeAssetNames = ["buildLog.conf", "build.conf", "app.conf"];
+}
+
+
+enum buildTimeAssetPresent(string p) = __traits(compiles, import(p));
+
+class BuildTimeBundle: Bundle 
+{
+    private Asset[string] predefinedAssets;
+    
+    this()
+    {
+        static foreach(p; buildTimeAssetNames)
+        {
+            static if (buildTimeAssetPresent!p)
+            {
+                predefinedAssets[p] = new BuildTimeAsset!p;
+            }
+        }
+    }
+
+    Asset[] ls()
+    {
+        return predefinedAssets.values().array;
+    }
+
+    @property
+    string scheme()
+    {
+        return "build";
+    }
+    
+    bool exists(string path)
+    {
+        return (path in predefinedAssets) !is null;
+    }
+    
+    Optional!Asset find(string path)
+    {
+        if (!exists(path))
+            return no!Asset;
+        return predefinedAssets[path].some;
+    }
+}
+
+//todo would logging here be useful?
 class BundleRegistrar {
     private Bundle[] backend;
     

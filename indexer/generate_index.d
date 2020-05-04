@@ -198,6 +198,11 @@ bool generateBundle(SourceSet sourceSet, DirEntry d){
     if (descriptorPath.exists){
         auto descriptorFile = File(descriptorPath, "r");
         auto toBundle = descriptorFile.byLineCopy.array;
+        //todo include logging.conf and application.conf by default
+        //also include package.conf by default under package name
+        //allow exclusion of these defaults by !application.conf, ...
+        
+        //todo allow for regex when defining inclusions
         writeln(__FILE__, ":", __LINE__, " ", "toBundle: ", toBundle);
         if (toBundle.empty) {
             writeln(__FILE__, ":", __LINE__, " ", "Empty bundle");

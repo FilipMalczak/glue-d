@@ -88,16 +88,16 @@ struct StaticSink {
     import std.array;
     import std.conv;
     
-    private static string getBuildLogConfig(){
-        static if (__traits(compiles, import("buildLog.conf")) && !import("buildLog.conf").empty){
-            return import("buildLog.conf");
+    private static string getBuildLogConfig(string filename)(){
+        static if (__traits(compiles, import(filename)) && !import(filename).empty){
+            return import(filename);
         } else {
-            version(silent_build){
-                return "log.level=NONE";
-            } else {
-                pragma(msg, "Build log configuration (./buildLog.conf) is missing or is empty!");
-                return "";
+            version(silent_build) {}
+            else
+            {
+                pragma(msg, "Build log configuration ("~filename~") is missing or is empty!");
             }
+            return "";
         }
     }
     
@@ -143,18 +143,38 @@ struct StaticSink {
     private static PackageLogEntry getBuildLogProperd(){
         PackageLogEntry[string] x;
         PackageLogEntry root = PackageLogEntry("", x, no!Level);
-        auto props = parseProperties(getBuildLogConfig());
-        foreach (k; props.keys()){
-            auto name = k;
-            if (name.startsWith("log.level")) {
-                name = name["log.level".length..$];
-                if (name.startsWith("."))
-                    name = name[1..$];
-                root.put(name, props[k].toLevel);
+        void load(string filename)()
+        {
+            auto props = parseProperties(getBuildLogConfig!(filename)());
+        
+            foreach (k; props.keys()){
+                auto name = k;
+                if (name.startsWith("log.level")) {
+                    name = name["log.level".length..$];
+                    if (name.startsWith("."))
+                        name = name[1..$];
+                    root.put(name, props[k].toLevel);
+                }
             }
         }
+        //todo test this finally...
+        load!"buildLog.conf"();
+        version(unittest)
+        {
+            load!"buildLog.test.conf"();
+        }
+        
         if (root.explicitDefinition.empty)
-            root.explicitDefinition = Level.INFO.some;
+        {
+            version (silent_build)
+            {
+                root.explicitDefinition = Level.NONE.some;
+            }
+            else 
+            {
+                root.explicitDefinition = Level.INFO.some;
+            }
+        }
         return root;
     }
 
