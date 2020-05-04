@@ -1,3 +1,4 @@
+//todo remove underscores, sanitize module names
 module glued.annotations.common_annotations;
 
 import std.conv: to;
