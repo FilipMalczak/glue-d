@@ -1,17 +1,18 @@
 module glued.annotations.common_impl;
 
+import std.traits;
+
 import glued.utils;
 
-//todo introduce RAW_STRUCT and friends, TEMPLATE, and then STRUCT = RAW_STRUCT | TEMPLATE
 enum TargetType {
-    MODULE = 0, //non-target 
+    MODULE = 1 << 31, //non-target ; 31 is max value when using <<
     FUNCTION = 1<<0,
     VARIABLE = 1<<1,
     INTERFACE = 1<<2,
     CLASS = 1<<3,
     STRUCT = 1<<4,
     ENUM = 1<<5,
-    //todo annotation?
+    //todo consider making annotations, templates, unittests targets as well; introduce RAW_STRUCT and friends, TEMPLATE, and then STRUCT = RAW_STRUCT | TEMPLATE
     
     CODE = (FUNCTION | VARIABLE),
     
@@ -47,8 +48,21 @@ template TargetTypeOf(T...) if (T.length == 1) {
             enum TargetTypeOf = TargetType.ENUM;
         }
     } else {
-        //todo what about templates? template ... { class ... }}
-        static assert(false, "support for methods and fields is coming");
+        static if (isFunction!(T[0]))
+        {
+            enum TargetTypeOf = TargetType.FUNCTION;
+        }
+        else
+        {
+            static if (__traits(compiles, typeof(T[0])))
+            {
+                enum TargetTypeOf = TargetType.VARIABLE;
+            }
+            else 
+            {
+                enum TargetTypeOf = TargetType.MODULE;
+            }
+        }
     }
 }
 

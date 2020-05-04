@@ -3,24 +3,69 @@ module glued.testsuites.annotations;
 import std.meta;
 import glued.annotations;
 
-interface I {}
-class C {}
-struct St {}
-enum E;   
+interface I 
+{
+    void foo();
+    final int bar(){return 0;}
+}
+class C 
+{
+    int x;
+    private string y;
+    int foo() { return 1; }
+    private void bar(){}
+}
+struct St 
+{
+    bool z;
+    private float u;
+    bool foo(){return true;}
+    private void bar() {}
+}
+enum E; //fixme is there anything to be done with enums? maybe TargetType.ENUM_VALUE?
 
-unittest {
+unittest 
+{
     import glued.annotations.common_impl;
-    with (TargetType) {
+    with (TargetType) 
+    {
         static assert(TargetTypeOf!I == INTERFACE);
+        static assert(TargetTypeOf!(I.foo) == FUNCTION);
+        static assert(TargetTypeOf!(I.bar) == FUNCTION);
+        
         static assert(TargetTypeOf!C == CLASS);
+        static assert(TargetTypeOf!(C.x) == VARIABLE);
+        static assert(TargetTypeOf!(C.y) == VARIABLE);
+        static assert(TargetTypeOf!(C.foo) == FUNCTION);
+        static assert(TargetTypeOf!(C.bar) == FUNCTION);
+        
         static assert(TargetTypeOf!St == STRUCT);
+        static assert(TargetTypeOf!(St.z) == VARIABLE);
+        static assert(TargetTypeOf!(St.u) == VARIABLE);
+        static assert(TargetTypeOf!(St.foo) == FUNCTION);
+        static assert(TargetTypeOf!(St.bar) == FUNCTION);
+        
         static assert(TargetTypeOf!E == ENUM);
         
+        static assert(TargetTypeOf!(glued.annotations.common_impl) == MODULE);
+    }
+}
+
+unittest
+{
+    import std.traits;
+    import glued.annotations.common_impl;
+    with (TargetType)
+    {
         static assert(Target(CLASS).canAnnotate(CLASS));
         static assert(Target(POINTER).canAnnotate(CLASS));
         static assert(Target(CLASS, STRUCT).canAnnotate(STRUCT));
         static assert(Target(CLASS, INTERFACE).canAnnotate(CLASS));
         static assert(Target(TYPE).canAnnotate(INTERFACE));
+        
+        static foreach (v; EnumMembers!TargetType)
+            static if (v != TargetType.MODULE)
+                static assert(!Target(MODULE).canAnnotate(v));
     }
 }
 
