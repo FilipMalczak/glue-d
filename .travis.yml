@@ -7,24 +7,24 @@ jobs:
       dist: xenial
       d: dmd
       env: CI_CONTEXT=xenial_dmd
-    - os: linux
-      dist: bionic
-      d: dmd
-      env: CI_CONTEXT=bionic_dmd
-    - os: osx
-      d: dmd
-      env: CI_CONTEXT=osx_dmd
-    - os: linux
-      dist: xenial
-      d: ldc
-      env: CI_CONTEXT=xenial_ldc
-    - os: linux
-      dist: bionic
-      d: ldc
-      env: CI_CONTEXT=bionic_ldc
-    - os: osx
-      d: ldc
-      env: CI_CONTEXT=osx_ldc
+#    - os: linux
+#      dist: bionic
+#      d: dmd
+#      env: CI_CONTEXT=bionic_dmd
+#    - os: osx
+#      d: dmd
+#      env: CI_CONTEXT=osx_dmd
+#    - os: linux
+#      dist: xenial
+#      d: ldc
+#      env: CI_CONTEXT=xenial_ldc
+#    - os: linux
+#      dist: bionic
+#      d: ldc
+#      env: CI_CONTEXT=bionic_ldc
+#    - os: osx
+#      d: ldc
+#      env: CI_CONTEXT=osx_ldc
 
 install:
  - "./clean.sh"
@@ -34,11 +34,12 @@ install:
 #todo in setups other than xenial/dmd there is no point in using -b unittest-cov
 script:
  - "dub test glue-d:annotations -b unittest-cov --compiler=${DC}"
+ - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F annotations'
  - "dub test glue-d:codescan -b unittest-cov --compiler=${DC}"
+ - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F codescan'
  - "dub test glue-d:logging -b unittest-cov --compiler=${DC}"
+ - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F logging'
  - "dub test glue-d:utils -b unittest-cov --compiler=${DC}"
+ - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F utils'
  - "dub test -b unittest-cov --compiler=${DC}"
-after_success:
- # upload coverage only on linux/dmd (to minimize confusion)
- - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash)'
-
+ - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F core'
