@@ -1,6 +1,6 @@
 module glued.application.di.resolveCall;
 
-import std.traits: moduleName, fullyQualifiedName;
+import std.traits: moduleName, fullyQualifiedName, isCallable, Parameters, ReturnType;
 import std.array: join;
 
 import glued.logging;
@@ -21,25 +21,27 @@ string generateResolvedExpression(P...)(){
     string result = "toCall(";
     string[] params;
     static foreach (p; P){
-        result ~= "injector.get!("~fullyQualifiedName!p~")";
+        params ~= "injector.get!("~fullyQualifiedName!p~")";
     }
     result ~= params.join(", ");
     result ~= ")";
     return result;
 }
 
-//todo reusable and useful
-auto resolveCall(R, P...)(Dejector injector, R function(P) toCall){
-    return resolveCall(injector, toDelegate(foo));
+auto resolveCall(F...)(Dejector injector, F toCall)
+    if (isCallable!(F))
+{
+    alias R = ReturnType!F;
+    alias P = Parameters!F;
+    return resolveCall!(R, P)(cast(R delegate(P)) toDelegate(toCall));
 }
 
-auto resolveCall(R, P...)(Dejector injector, R delegate(P) toCall){
+auto resolveCall(R, P...)(Dejector injector, R delegate(P) toCall)
+{
     mixin CreateLogger;
-
-    mixin(generateImports!(P)());
-    static if (is(ReturnType!foo == void)){
-        mixin(Logger.logged!(generateResolvedExpression!(P)()~";"));
+    static if (is(R == void)){
+        mixin(Logger.logged!(generateImports!(P)()~generateResolvedExpression!(P)()~";"));
     } else {
-        mixin(Logger.logged.value!("return "~generateResolvedExpression!(P)()~";"));
+        mixin(Logger.logged.value!(generateImports!(P)()~"return "~generateResolvedExpression!(P)()~";"));
     }
 }

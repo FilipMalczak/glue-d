@@ -36,6 +36,22 @@ unittest {
     log.info.emit("runtime with ex1 passed");
 }
 
+import foo.api: FooWithExpected;
+
+void compareResults(FooWithExpected f, int[] fixed, size_t toRandomize){
+    import std.random;
+    int[] toCheck;
+    toCheck ~= fixed;
+    while (toCheck.length < (toRandomize+fixed.length))
+    {
+        int candidate = uniform!int;
+        if (!toCheck.canFind(candidate))
+            toCheck ~= candidate;
+    }
+    foreach (i; toCheck)
+        assert(f.foo(i) == f.expected(i));
+}
+
 unittest {
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
@@ -43,18 +59,53 @@ unittest {
     r.start();
     
     import foo.api;
-    Api api = r.injector.get!Api;
-    assert(api !is null);
-    int expected(int x){
-        return x*x + 5*x + 3;
-    }
+    auto impl = r.injector.get!FooByField;
+    assert(impl !is null);
 
-    assert(api.foo(0) == expected(0));
-    assert(api.foo(1) == expected(1));
-    assert(api.foo(2) == expected(2));
-    assert(api.foo(5) == expected(5));
-    log.info.emit("runtime with foo passed");
-    //todo randomized tests?
+    compareResults(impl, [0, 1, 2, 5], 5);
+    log.info.emit("runtime with foo/byField passed");
+}
+
+unittest {
+    mixin CreateLogger;
+    Logger log = Logger(new StdoutSink);
+    auto r = new GluedRuntime!(at("foo"))();
+    r.start();
+    
+    import foo.api;
+    auto impl = r.injector.get!FooByConstructor;
+    assert(impl !is null);
+
+    compareResults(impl, [0, 1, 2, 5], 5);
+    log.info.emit("runtime with foo/byConstructor passed");
+}
+
+unittest {
+    mixin CreateLogger;
+    Logger log = Logger(new StdoutSink);
+    auto r = new GluedRuntime!(at("foo"))();
+    r.start();
+    
+    import foo.api;
+    auto impl = r.injector.get!FooByProperty;
+    assert(impl !is null);
+
+    compareResults(impl, [0, 1, 2, 5], 5);
+    log.info.emit("runtime with foo/byProperty passed");
+}
+
+unittest {
+    mixin CreateLogger;
+    Logger log = Logger(new StdoutSink);
+    auto r = new GluedRuntime!(at("foo"))();
+    r.start();
+    
+    import foo.api;
+    auto impl = r.injector.get!MixedFoo;
+    assert(impl !is null);
+
+    compareResults(impl, [0, 1, 2, 5], 5);
+    log.info.emit("runtime with foo/mixed passed");
 }
 
 unittest {
@@ -91,3 +142,4 @@ unittest {
     log.info.emit("autobinding implementations passed");
 }
 ////todo autobinding sole impl
+

@@ -55,11 +55,8 @@ Detailed status:
     * figure out naming - what is library, what is "bundle"/"starter", etc; 
       we need some abstraction of library you depend on, add an annotation and
       autoconfiguration (scanning, defaults, etc) 
-* enhancements
-  * __property=method/postcostruct injection__
-  * refactor existing code to use logging
-  * enhance tests
 * new features
+  * @PostConstruct methods
   * annotations enhancements:
     * validation (missing method/field/etc, only known Targets are types; 
       validations here are "has (no) parameter of type/name", "name matches" 
@@ -75,6 +72,7 @@ Detailed status:
       dejector to this repo, duplicating resolveCall here or moving seed, 
       the whole annotations module and probably some annotation definitions there)
   * environment (string/string key-value pairs)
+    * data is already gathered, but whats left is...
     * injection with @Config with support for simple types
   * value registry (environment required)
     * config inspection
