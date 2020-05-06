@@ -24,6 +24,7 @@ class FooByField: FooWithExpected
     @Autowire
     Add add;
 
+    @DontInject
     this(){
         assert(false, "If this constructor was called, then something is seriously effed up");
     }
@@ -100,6 +101,7 @@ class FooByProperty: FooWithExpected
     @Autowire
     @property void addProp(Add a) { add = a; }
     
+    @DontInject
     this(){
         assert(false, "If this constructor was called, then something is seriously effed up");
     }

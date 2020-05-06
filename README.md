@@ -65,9 +65,6 @@ Detailed status:
       superclasses and copy annotations from super 
   * __enhanced resolveCall and friends__
     * @Param(i/name, annotations...) - repeatable, used to define param-level annotations
-      * this can be a good moment to introduce more strict @Repeatable, something with
-        semantics "this annotation can be repeated up to once with given argument", 
-        which would be useful to validate that there is single @Param per argument)
     * @Seed on non-config method? (that would probably require either merging 
       dejector to this repo, duplicating resolveCall here or moving seed, 
       the whole annotations module and probably some annotation definitions there)
