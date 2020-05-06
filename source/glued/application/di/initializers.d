@@ -133,20 +133,20 @@ class ComponentSeedInitializer(T): InstanceInitializer!(T, false)
     }
 
     private void constructorInjection(T t){
-        //todo refactor like superclass
+        enum isPublic(alias ctor) = __traits(getProtection, ctor) == "public";
+        enum isAnnotatedForInjection(alias ctor) = hasOneAnnotation!(ctor, Constructor);
         static if (hasMember!(T, "__ctor")) {
             bool ctorCalled = false;
             static foreach (i, ctor; __traits(getOverloads, T, "__ctor")){
-                static if (__traits(getProtection, ctor) == "public" && hasOneAnnotation!(ctor, Constructor)){
+                static if (isPublic!ctor && isAnnotatedForInjection!ctor){
                     //todo when only one constructor - default
-                    assert(!ctorCalled); //todo static?
+                    assert(!ctorCalled);
                     log.debug_.emit("Calling constructor for seed ", &t, " of type ", fullyQualifiedName!T);
                     resolveCall(this.injector, &__traits(getOverloads, t, "__ctor")[i]);
                     //mixin(callCtor!(Parameters!(ctor)());
                     log.debug_.emit("Called constructor for instance", &t);
-                    //todo maybe we can allow for many constructors?
                     ctorCalled = true;
-                } // else assert not hasAnnotations
+                }
             }
         }
     }
