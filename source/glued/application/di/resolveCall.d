@@ -36,6 +36,7 @@ auto resolveCall(F...)(Dejector injector, F toCall)
     return resolveCall!(R, P)(cast(R delegate(P)) toDelegate(toCall));
 }
 
+//todo add @Param(int idx/string name, alias annotations)
 auto resolveCall(R, P...)(Dejector injector, R delegate(P) toCall)
 {
     mixin CreateLogger;
