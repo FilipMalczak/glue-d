@@ -26,10 +26,8 @@ struct Seed {}
  */
 struct Constructor {}
 
-//todo implement this
+//todo implement PostConstruct and PreDestruct
 struct PostConstruct {}
-
-//todo predestruct
 
 ///helper type to recognize autowiring by annotated target type
 enum DefaultQuery;
