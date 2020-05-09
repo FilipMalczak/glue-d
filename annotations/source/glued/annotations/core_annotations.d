@@ -53,3 +53,19 @@ struct Implies(alias S) if (is(typeof(S) == struct)) { //todo ditto
         alias getImplicated = Alias!(S); 
     } 
 }
+
+//todo sanitize these; maybe some documentational UDA?
+
+///UDA for "magic annotations" like OnParameter, that should be filtered out
+/// when retrieving target annotations
+//todo Implies is magic, checkedby and nonimplicable as well
+enum GluedMagic;
+
+//@Repeatable
+//@Target(TargetType.FUNCTION)
+@GluedMagic
+struct OnParameter(size_t _paramIdx, alias _annotation)
+{
+    enum paramIdx = _paramIdx;
+    alias annotation = _annotation;
+}

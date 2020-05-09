@@ -1,14 +1,39 @@
 module glued.annotations.core_impl;
 
-import std.meta: AliasSeq, Filter, staticMap, NoDuplicates;
-import std.traits: getUDAs;
+import std.meta: AliasSeq, Filter, staticMap, NoDuplicates, allSatisfy;
+import std.traits;
 
 import glued.annotations.core_annotations;
 import glued.annotations.validation_impl;
 import glued.utils: ofType, toType, toAnnotableType;
 
-//todo wrong name
+private struct ParameterPointer(alias Foo){
+    alias Target = Foo;
+    string paramName;
+    size_t paramIdx;
+}
+
+template parameter(alias Foo, size_t paramIdx)
+    if (isCallable!(Foo) && paramIdx < Parameters!Foo.length)
+{
+    enum parameter = ParameterPointer!(Foo)(ParameterIdentifierTuple!(Foo)[paramIdx], paramIdx);
+}
+
 enum isStructInstance(alias X) = is (typeof(X) == struct);
+
+template isNotMagic(X...)
+    if (X.length == 1)
+{
+    enum nonMagicalType(X) = !hasUDA!(X, GluedMagic);
+    static if (is(X))
+    {
+        enum isNotMagic = nonMagicalType!X;
+    }
+    else
+    {
+        enum isNotMagic = allSatisfy!(nonMagicalType, toAnnotableType!(X));    
+    }
+}
 
 template expandToData(alias X)
     {
@@ -61,7 +86,30 @@ template expandToData(alias X)
 
 template getExplicitAnnotations(alias M) 
 {
-    alias getExplicitAnnotations = Filter!(isStructInstance, staticMap!(expandToData, __traits(getAttributes, M)));
+    enum isParamPointer(alias X) = __traits(hasMember, X, "Target") &&
+                                    __traits(hasMember, X, "paramName") &&
+                                    __traits(hasMember, X, "paramIdx"); //todo check types of these fields
+    static if (isParamPointer!M)
+    {
+        //todo clean up these debug "logs" (check "functions" testsuite too)
+//        pragma(msg, __FILE__, ":", __LINE__);
+        
+        alias OnParameterUDAs = staticMap!(expandToData, getUDAs!(M.Target, OnParameter));
+//        pragma(msg, "PARAM UDA ", M.stringof, " -> ", OnParameterUDAs);
+        
+        enum pred(alias U) = U.paramIdx == M.paramIdx;
+        alias relevant = Filter!(pred, OnParameterUDAs);
+//        pragma(msg, "PARAM RELEVANT ", M.stringof, " -> ", relevant);
+        
+        enum unpack(alias X) = expandToData!(X.annotation);
+        alias getExplicitAnnotations = staticMap!(unpack, relevant);
+//        pragma(msg, "PARAM RESULT ", M.stringof, " -> ", getExplicitAnnotations);
+    }
+    else
+    {
+        enum pred(alias X) = isStructInstance!X && isNotMagic!X;
+        alias getExplicitAnnotations = Filter!(pred, staticMap!(expandToData, __traits(getAttributes, M)));
+    }
 }
 
 template getExplicitAnnotationTypes(alias M) 
