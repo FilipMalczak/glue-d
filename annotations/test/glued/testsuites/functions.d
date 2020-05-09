@@ -20,6 +20,7 @@ struct S4 { int x; }
 @OnParameter!(1, S3())
 @OnParameter!("s", S4)
 @OnParameter!("x", S2())
+@S1
 void foo(int x, string s, bool b){}
 
 
@@ -38,4 +39,6 @@ unittest
     
     static assert(getAnnotations!(parameter!(foo, 2)).length == 0);
     static assert(getAnnotations!(parameter!(foo, "b")).length == 0);
+    
+    static assert(getAnnotations!(foo) == AliasSeq!(S1()));
 }
