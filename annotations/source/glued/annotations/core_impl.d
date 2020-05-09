@@ -2,6 +2,7 @@ module glued.annotations.core_impl;
 
 import std.meta: AliasSeq, Filter, staticMap, NoDuplicates, allSatisfy;
 import std.traits;
+import std.algorithm;
 
 import glued.annotations.core_annotations;
 import glued.annotations.validation_impl;
@@ -17,6 +18,23 @@ template parameter(alias Foo, size_t paramIdx)
     if (isCallable!(Foo) && paramIdx < Parameters!Foo.length)
 {
     enum parameter = ParameterPointer!(Foo)(ParameterIdentifierTuple!(Foo)[paramIdx], paramIdx);
+}
+
+
+template parameter(alias Foo, string paramName)
+    // remember that parameter names are given as tuple - wrap it in [...] for canFind to work properly
+    if (isCallable!(Foo) && [ ParameterIdentifierTuple!(Foo) ].canFind(paramName))
+{
+    static foreach (i, n; ParameterIdentifierTuple!(Foo))
+    {
+        static if (n == paramName)
+        {
+            enum parameter = ParameterPointer!(Foo)(n, i);
+        }
+        //else is not required - we checked that parameter name is present in 
+        // template definition and language itself disallows name repetition,
+        // so we are sure that this 'if' will trigger exactly once
+    }
 }
 
 enum isStructInstance(alias X) = is (typeof(X) == struct);
@@ -97,7 +115,7 @@ template getExplicitAnnotations(alias M)
         alias OnParameterUDAs = staticMap!(expandToData, getUDAs!(M.Target, OnParameter));
 //        pragma(msg, "PARAM UDA ", M.stringof, " -> ", OnParameterUDAs);
         
-        enum pred(alias U) = U.paramIdx == M.paramIdx;
+        enum pred(alias U) = U.describesParam!(M.paramName, M.paramIdx);
         alias relevant = Filter!(pred, OnParameterUDAs);
 //        pragma(msg, "PARAM RELEVANT ", M.stringof, " -> ", relevant);
         

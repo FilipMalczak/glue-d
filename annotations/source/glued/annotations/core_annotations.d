@@ -68,4 +68,17 @@ struct OnParameter(size_t _paramIdx, alias _annotation)
 {
     enum paramIdx = _paramIdx;
     alias annotation = _annotation;
+    
+    enum describesParam(string name, size_t idx) = (idx == paramIdx);
+}
+
+//@Repeatable
+//@Target(TargetType.FUNCTION)
+@GluedMagic
+struct OnParameter(string _paramName, alias _annotation)
+{
+    enum paramName = _paramName;
+    alias annotation = _annotation;
+    
+    enum describesParam(string name, size_t idx) = (name == paramName);
 }
