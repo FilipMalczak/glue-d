@@ -5,7 +5,7 @@ import std.traits: getUDAs;
 
 import glued.annotations.core_annotations;
 import glued.annotations.validation_impl;
-import glued.utils: ofType, toType;
+import glued.utils: ofType, toType, toAnnotableType;
 
 //todo wrong name
 enum isStructInstance(alias X) = is (typeof(X) == struct);
@@ -77,16 +77,15 @@ template toTypes(X...)
 
 template extractImplicit(alias A) 
 {
+//there may be some weird bug here, I suppose it will come up at some point
 //correct way: check what not-Implies!(...) annotations imply, extract Implies from these
 //add local Implies, profit
-//todo
-//        static assert isAnnotation!A;
     alias unpack(I) = I.getImplicated!(); 
     alias implications = getUDAs!(A, Implies); 
     alias locallyImplicated = staticMap!(unpack, implications); 
     static if (locallyImplicated.length > 0) 
     {
-        template step(int i, Acc...)
+        template step(size_t i, Acc...)
         {
             static if (i == locallyImplicated.length)
             {
@@ -94,11 +93,28 @@ template extractImplicit(alias A)
             }
             else 
             {
-                alias step = step!(i+1, AliasSeq!(extractImplicit!(typeof(locallyImplicated[i])), Acc));
+                alias types = toAnnotableType!(locallyImplicated[i]);
+                template innerStep(size_t j, Acc2...)
+                {
+                    static if (j == types.length)
+                    {
+                        alias innerStep = Acc2;
+                    }
+                    else
+                    {
+                        alias innerStep = innerStep!(j+1, AliasSeq!(extractImplicit!(types[j]), Acc2));
+                    }
+                }
+                alias step = step!(i+1, AliasSeq!(innerStep!0, Acc));
             }
         }
-        //todo what a clustertruck
-        alias theirImplications = step!(0);//staticMap!(extractImplicit, toTypes!theirImplications);//probably extract from all UDAs instead
+        //I've had at least 4 distinct approaches to proper staticMap-based 
+        //solution to this
+        //if you gave up on life and just want to waste as much time as possible
+        //before sweet death takes you away, have a go
+        //
+        //PS. tell "resursive template expansion" that I've said 'hi, I still hate you'
+        alias theirImplications = step!(0);
         alias extractImplicit = AliasSeq!(locallyImplicated, theirImplications);
     }
     else 
@@ -124,7 +140,6 @@ template getAnnotations(alias M, alias T)
 
 template getAnnotation(alias M, alias T) 
 {
-    //todo return None instead? allow ommiting by version?
     static assert(hasOneAnnotation!(M, T));
     enum getAnnotation = getAnnotations!(M, T)[0];
 }

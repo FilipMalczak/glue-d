@@ -1,4 +1,4 @@
-module glued.annotations.api;
+module glued.annotations;
 
 public import glued.annotations.core_annotations;
 public import glued.annotations.common_annotations;
