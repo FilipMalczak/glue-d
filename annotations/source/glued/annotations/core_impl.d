@@ -109,19 +109,14 @@ template getExplicitAnnotations(alias M)
                                     __traits(hasMember, X, "paramIdx"); //todo check types of these fields
     static if (isParamPointer!M)
     {
-        //todo clean up these debug "logs" (check "functions" testsuite too)
-//        pragma(msg, __FILE__, ":", __LINE__);
         
         alias OnParameterUDAs = staticMap!(expandToData, getUDAs!(M.Target, OnParameter));
-//        pragma(msg, "PARAM UDA ", M.stringof, " -> ", OnParameterUDAs);
         
         enum pred(alias U) = U.describesParam!(M.paramName, M.paramIdx);
         alias relevant = Filter!(pred, OnParameterUDAs);
-//        pragma(msg, "PARAM RELEVANT ", M.stringof, " -> ", relevant);
         
         enum unpack(alias X) = expandToData!(X.annotation);
         alias getExplicitAnnotations = staticMap!(unpack, relevant);
-//        pragma(msg, "PARAM RESULT ", M.stringof, " -> ", getExplicitAnnotations);
     }
     else
     {
