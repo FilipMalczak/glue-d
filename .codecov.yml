@@ -2,7 +2,6 @@ ignore:
   - "**/test/**/*"
 
 comment:
-  behaviour: new
   require_changes: true
   after_n_builds: 5 #there are 5 submodules
 
