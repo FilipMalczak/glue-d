@@ -45,7 +45,7 @@ class ConfigurationMethodProvider(C, string name, size_t i): Provider {
         C config = injector.get!C;
         log.debug_.emit("Resolved configuration class ", fullyQualifiedName!C, " instance ", &config);
         log.debug_.emit("Building configuration method ", fullyQualifiedName!C, ".", name);
-        auto instance = resolveCall(injector, &__traits(getOverloads, config, name)[i]);
+        auto instance = resolveCall!(__traits(getOverloads, C, name)[i])(injector, &__traits(getOverloads, config, name)[i]);
         enum isSeed = hasOneAnnotation!(__traits(getOverloads, C, name)[i], Seed); //todo assert not has many
         log.debug_.emit("Built initialized instance ", &instance, " method ", fullyQualifiedName!C, ".", name);
         auto initializer = isSeed ? new InstanceInitializer!(C, true)(injector) : new NullInitializer;

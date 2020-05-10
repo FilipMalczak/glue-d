@@ -197,7 +197,7 @@ class ComponentSeedInitializer(T): InstanceInitializer!(T, false)
                     {
                         assert(!ctorCalled);
                         log.debug_.emit("Calling constructor for seed ", &t, " of type ", fullyQualifiedName!T);
-                        resolveCall(this.injector, &__traits(getOverloads, t, "__ctor")[i]);
+                        resolveCall!(__traits(getOverloads, T, "__ctor")[i])(this.injector, &__traits(getOverloads, t, "__ctor")[i]);
                         log.debug_.emit("Called constructor for instance", &t);
                         ctorCalled = true;
                     }

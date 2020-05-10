@@ -42,3 +42,44 @@ unittest
     
     static assert(getAnnotations!(foo) == AliasSeq!(S1()));
 }
+
+class C {
+    @OnParameter!(0, S1)
+    @OnParameter!(0, S2(3))
+    @OnParameter!(1, S3())
+    @OnParameter!("s", S4)
+    @OnParameter!("x", S2())
+    @S1
+    void baz(int x, string s, bool b){}
+}
+
+unittest
+{
+    alias bar = __traits(getOverloads, C, "baz")[0];
+    static assert(getAnnotations!(parameter!(bar, 0)) == AliasSeq!(S1(), S2(3), S2()));
+    static assert(getAnnotations!(parameter!(bar, "x")) == AliasSeq!(S1(), S2(3), S2()));
+    
+    static assert(getAnnotations!(parameter!(bar, 1)) == AliasSeq!(S3(), S4(), S1(7), S3(5)));
+    static assert(getAnnotations!(parameter!(bar, "s")) == AliasSeq!(S3(), S4(), S1(7), S3(5)));
+    
+    static assert(getAnnotations!(parameter!(bar, 2)).length == 0);
+    static assert(getAnnotations!(parameter!(bar, "b")).length == 0);
+    
+    static assert(getAnnotations!(bar) == AliasSeq!(S1()));
+}
+
+unittest
+{
+    C c = new C;
+    auto bar = typeof(&(__traits(getOverloads, c, "baz")[0]));
+    static assert(getAnnotations!(parameter!(bar, 0)) == AliasSeq!(S1(), S2(3), S2()));
+    static assert(getAnnotations!(parameter!(bar, "x")) == AliasSeq!(S1(), S2(3), S2()));
+    
+    static assert(getAnnotations!(parameter!(bar, 1)) == AliasSeq!(S3(), S4(), S1(7), S3(5)));
+    static assert(getAnnotations!(parameter!(bar, "s")) == AliasSeq!(S3(), S4(), S1(7), S3(5)));
+    
+    static assert(getAnnotations!(parameter!(bar, 2)).length == 0);
+    static assert(getAnnotations!(parameter!(bar, "b")).length == 0);
+    
+    static assert(getAnnotations!(bar) == AliasSeq!(S1()));
+}

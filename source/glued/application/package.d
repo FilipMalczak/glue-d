@@ -8,3 +8,4 @@ public import glued.application.stereotypes;
 public import glued.application.di.annotations;
 public import glued.codescan.scannable;
 
+public import glued.application.di.resolveCall;
