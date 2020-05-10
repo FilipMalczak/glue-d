@@ -67,19 +67,3 @@ unittest
     
     static assert(getAnnotations!(bar) == AliasSeq!(S1()));
 }
-
-unittest
-{
-    C c = new C;
-    auto bar = typeof(&(__traits(getOverloads, c, "baz")[0]));
-    static assert(getAnnotations!(parameter!(bar, 0)) == AliasSeq!(S1(), S2(3), S2()));
-    static assert(getAnnotations!(parameter!(bar, "x")) == AliasSeq!(S1(), S2(3), S2()));
-    
-    static assert(getAnnotations!(parameter!(bar, 1)) == AliasSeq!(S3(), S4(), S1(7), S3(5)));
-    static assert(getAnnotations!(parameter!(bar, "s")) == AliasSeq!(S3(), S4(), S1(7), S3(5)));
-    
-    static assert(getAnnotations!(parameter!(bar, 2)).length == 0);
-    static assert(getAnnotations!(parameter!(bar, "b")).length == 0);
-    
-    static assert(getAnnotations!(bar) == AliasSeq!(S1()));
-}
