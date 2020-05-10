@@ -1,0 +1,34 @@
+ignore:
+  - "**/test/**/*"
+
+comment:
+  require_changes: true
+  after_n_builds: 5 #there are 5 submodules
+
+coverage:
+  status:
+    project: true
+    patch: true
+    changes: true
+
+flags:
+  core:
+    paths:
+      - source/**
+    carryforward: false
+  annotations:
+    paths:
+      - annotations/source/**
+    carryforward: false
+  codescan:
+    paths:
+      - codescan/source/**
+    carryforward: false
+  logging:
+    paths:
+      - logging/source/**
+    carryforward: false
+  utils:
+    paths:
+      - utils/source/**
+    carryforward: false
