@@ -2,6 +2,7 @@ module glued.testsuites.runtime;
 
 import std.algorithm;
 import std.meta;
+import std.functional;
 
 import glued.application;
 import glued.logging;
@@ -38,8 +39,12 @@ unittest {
 
 import foo.api: FooWithExpected;
 
+//todo this could go to testutils or smth like that
 void compareResults(FooWithExpected f, int[] fixed, size_t toRandomize){
     import std.random;
+    import core.exception;
+    import std.stdio;
+    
     int[] toCheck;
     toCheck ~= fixed;
     while (toCheck.length < (toRandomize+fixed.length))
@@ -49,7 +54,18 @@ void compareResults(FooWithExpected f, int[] fixed, size_t toRandomize){
             toCheck ~= candidate;
     }
     foreach (i; toCheck)
-        assert(f.foo(i) == f.expected(i));
+    {
+        auto result = f.foo(i);
+        auto expectedResult = f.expected(i);
+        try
+        {
+            assert(result == expectedResult);
+        } catch (AssertError e)
+        {
+            writeln("ERROR: Expected ", expectedResult, "; got ", result, " instead! (arg: ", i, ")");
+            throw e;
+        }
+    }
 }
 
 unittest {
