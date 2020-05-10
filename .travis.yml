@@ -7,24 +7,24 @@ jobs:
       dist: xenial
       d: dmd
       env: CI_CONTEXT=xenial_dmd
-#    - os: linux
-#      dist: bionic
-#      d: dmd
-#      env: CI_CONTEXT=bionic_dmd
-#    - os: osx
-#      d: dmd
-#      env: CI_CONTEXT=osx_dmd
-#    - os: linux
-#      dist: xenial
-#      d: ldc
-#      env: CI_CONTEXT=xenial_ldc
-#    - os: linux
-#      dist: bionic
-#      d: ldc
-#      env: CI_CONTEXT=bionic_ldc
-#    - os: osx
-#      d: ldc
-#      env: CI_CONTEXT=osx_ldc
+    - os: linux
+      dist: bionic
+      d: dmd
+      env: CI_CONTEXT=bionic_dmd
+    - os: osx
+      d: dmd
+      env: CI_CONTEXT=osx_dmd
+    - os: linux
+      dist: xenial
+      d: ldc
+      env: CI_CONTEXT=xenial_ldc
+    - os: linux
+      dist: bionic
+      d: ldc
+      env: CI_CONTEXT=bionic_ldc
+    - os: osx
+      d: ldc
+      env: CI_CONTEXT=osx_ldc
 
 install:
  - "./clean.sh"
