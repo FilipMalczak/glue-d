@@ -8,9 +8,12 @@ import glued.logging;
 import glued.set;
 import glued.utils;
 
+import glued.testutils;
+
 import dejector; //fixme only for queryString; same old story -.-'
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto runtime = new GluedRuntime!(at("apps.app1"))();
@@ -24,7 +27,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("ex1"))();
@@ -36,23 +40,8 @@ unittest {
     log.info.emit("runtime with ex1 passed");
 }
 
-import foo.api: FooWithExpected;
-
-void compareResults(FooWithExpected f, int[] fixed, size_t toRandomize){
-    import std.random;
-    int[] toCheck;
-    toCheck ~= fixed;
-    while (toCheck.length < (toRandomize+fixed.length))
-    {
-        int candidate = uniform!int;
-        if (!toCheck.canFind(candidate))
-            toCheck ~= candidate;
-    }
-    foreach (i; toCheck)
-        assert(f.foo(i) == f.expected(i));
-}
-
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -66,7 +55,8 @@ unittest {
     log.info.emit("runtime with foo/byField passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -80,7 +70,8 @@ unittest {
     log.info.emit("runtime with foo/byConstructor passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -94,7 +85,8 @@ unittest {
     log.info.emit("runtime with foo/byProperty passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -108,7 +100,8 @@ unittest {
     log.info.emit("runtime with foo/mixed passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("ex3"))();

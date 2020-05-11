@@ -4,10 +4,7 @@ import glued.application; //ditto from operators
 
 import foo.operators;
 
-interface FooWithExpected {
-    int foo(int x);
-    int expected(int x);
-}
+import glued.testutils: FooWithExpected;
 
 @Component
 class FooByField: FooWithExpected

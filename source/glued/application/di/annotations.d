@@ -45,4 +45,6 @@ struct Autowire(T=DefaultQuery) {
  * Used to indicate that annotated target should not be injected, e.g. when
  * injecting sole constructor.
  */
+ //todo DontInject should clash with Autowire, Constructor (and PostConstruct in the future)
+ //body mentioned annotations require checkers; we should also add constraints on repeatability and targets
 struct DontInject {}

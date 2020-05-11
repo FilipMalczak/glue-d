@@ -56,7 +56,7 @@ template toType(alias T){
 
 //fixme fugly name, its nothing to do with annotations, but I have no better idea now
 template toAnnotableType(alias T){
-    alias toTypes = AliasSeq!(NoDuplicates!(typeof(T), toType!(T)));
+    alias toAnnotableType = AliasSeq!(NoDuplicates!(typeof(T), toType!(T)));
 }
 
 enum isType(T) = (__traits(isTemplate, T) || is(T == class) || is(T == interface) || is(T == struct) || is(T == enum));

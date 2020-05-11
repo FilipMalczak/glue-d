@@ -56,8 +56,6 @@ struct RepetitionBoundaries {
         assert(lowerInc < upperExc);
     }
     
-    //this() assert both are positive
-    
     bool check(int occurences){
         return occurences >= lowerInc && occurences < upperExc;
     }
@@ -91,5 +89,5 @@ enum anyNumber = RepetitionBoundaries(0, size_t.max);
 @Metaannotation
 @CheckedBy!(RepeatableChecker)
 struct Repeatable {
-    RepetitionBoundaries boundaries;
+    RepetitionBoundaries boundaries = anyNumber;
 }
