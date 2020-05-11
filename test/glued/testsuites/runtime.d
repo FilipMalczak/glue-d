@@ -2,16 +2,18 @@ module glued.testsuites.runtime;
 
 import std.algorithm;
 import std.meta;
-import std.functional;
 
 import glued.application;
 import glued.logging;
 import glued.set;
 import glued.utils;
 
+import glued.testutils;
+
 import dejector; //fixme only for queryString; same old story -.-'
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto runtime = new GluedRuntime!(at("apps.app1"))();
@@ -25,7 +27,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("ex1"))();
@@ -37,38 +40,8 @@ unittest {
     log.info.emit("runtime with ex1 passed");
 }
 
-import foo.api: FooWithExpected;
-
-//todo this could go to testutils or smth like that
-void compareResults(FooWithExpected f, int[] fixed, size_t toRandomize){
-    import std.random;
-    import core.exception;
-    import std.stdio;
-    
-    int[] toCheck;
-    toCheck ~= fixed;
-    while (toCheck.length < (toRandomize+fixed.length))
-    {
-        int candidate = uniform!int;
-        if (!toCheck.canFind(candidate))
-            toCheck ~= candidate;
-    }
-    foreach (i; toCheck)
-    {
-        auto result = f.foo(i);
-        auto expectedResult = f.expected(i);
-        try
-        {
-            assert(result == expectedResult);
-        } catch (AssertError e)
-        {
-            writeln("ERROR: Expected ", expectedResult, "; got ", result, " instead! (arg: ", i, ")");
-            throw e;
-        }
-    }
-}
-
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -82,7 +55,8 @@ unittest {
     log.info.emit("runtime with foo/byField passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -96,7 +70,8 @@ unittest {
     log.info.emit("runtime with foo/byConstructor passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -110,7 +85,8 @@ unittest {
     log.info.emit("runtime with foo/byProperty passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -124,7 +100,8 @@ unittest {
     log.info.emit("runtime with foo/mixed passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("ex3"))();

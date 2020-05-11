@@ -6,7 +6,7 @@ import foo.operators;
 import glued.application;
 import glued.logging;
 
-import glued.testsuites.runtime: compareResults;
+import glued.testutils;
 
 class FooForFunction: FooWithExpected
 {
@@ -46,7 +46,8 @@ auto freeFunctionByFirstIdx(Operator power, Operator multiply, Add add)
     return new FooForFunction(power, multiply, add);
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -64,7 +65,8 @@ auto freeFunctionByMiddleIdx(Operator multiply, Operator power, Add add)
     return new FooForFunction(power, multiply, add);
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -82,7 +84,8 @@ auto freeFunctionByLastIdx(Operator multiply, Add add, Operator power)
     return new FooForFunction(power, multiply, add);
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -101,7 +104,8 @@ auto freeFunctionByFirstName(Operator power, Operator multiply, Add add)
     return new FooForFunction(power, multiply, add);
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -119,7 +123,8 @@ auto freeFunctionByMiddleName(Operator multiply, Operator power, Add add)
     return new FooForFunction(power, multiply, add);
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -137,7 +142,8 @@ auto freeFunctionByLastName(Operator multiply, Add add, Operator power)
     return new FooForFunction(power, multiply, add);
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -149,7 +155,8 @@ unittest {
     log.info.emit("resolveCall with free function and params by last name passed");
 }
 
-class ConfigLike {
+class ConfigLike 
+{
     @OnParameter!(0, Autowire!Power)
     static auto staticMethodByFirstIdx(Operator power, Operator multiply, Add add)
     {
@@ -223,9 +230,11 @@ class ConfigLike {
     }
 }
 
-//todo it would be good to test what happens when there are overloads of the method - both using __traits(getOverloads, X, "y") and X.y
+//todo Test what happens when there are overloads of the method
+//body both using __traits(getOverloads, X, "y") and X.y
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -238,7 +247,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -251,7 +261,8 @@ unittest {
     log.info.emit("resolveCall with instance method and params by first idx passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -264,7 +275,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -278,7 +290,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -291,7 +304,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -304,7 +318,8 @@ unittest {
     log.info.emit("resolveCall with instance method and params by middle idx passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -317,7 +332,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -332,7 +348,8 @@ unittest {
 
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -345,7 +362,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -358,7 +376,8 @@ unittest {
     log.info.emit("resolveCall with instance method and params by last idx passed");
 }
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();
@@ -371,7 +390,8 @@ unittest {
 }
 
 
-unittest {
+unittest 
+{
     mixin CreateLogger;
     Logger log = Logger(new StdoutSink);
     auto r = new GluedRuntime!(at("foo"))();

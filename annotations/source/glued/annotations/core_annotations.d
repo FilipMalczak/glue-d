@@ -8,22 +8,29 @@ module glued.annotations.core_annotations;
 import std.meta: Alias;
 import std.traits: hasUDA;
 
-/**
- * This is core facility of annotation validation, so it won't be checked itself,
- * and won't have any annotations. If it would be annotated, UDAs would look like
- *     @OnAnnotation
- *     @Repeatable(ANY_NUMBER)
- *     @NonImplicable
- * todo this is already outdated
- * @param Checker - bool foo(alias target, alias annotation, alias constraint)()
- *                  e.g. foo(UserController, Controller(), Target(CLASS)) - notice 
- *                      that target is symbol, while annotation and its constraint
- *                      are values
- */
-struct CheckedBy(alias Checker){
+import glued.annotations.common_annotations;
+import glued.annotations.common_impl;
+
+///UDA for "magic annotations" like OnParameter, that should be filtered out
+/// when retrieving target annotations
+enum GluedMagic;
+
+///Strictly documentational UDA; totally ignored by a framework, but defines
+/// how the "magic" annotation would be used.
+@GluedMagic
+enum MagicUsage(T...) = "And this is how we do it";
+
+@GluedMagic
+@MagicUsage!(OnAnnotation, Repeatable, NonImplicable)
+struct CheckedBy(alias Checker)
+{
+    ///bool foo(alias target, alias annotation, alias constraint)()
+    ///where target is a symbol and annotation and constraint are values (struct
+    ///instances)
     alias Check = Checker;
     
-    static bool check(T...)(){
+    static bool check(T...)()
+    {
         return Checker!(T)();
     }
 }
@@ -32,38 +39,41 @@ struct CheckedBy(alias Checker){
  * If this annotation is present on another annotation, the annotated one cannot
  * be subject of Implies!(...).
  */
+ @GluedMagic
 struct NonImplicable {}
 
-//todo this can be easily replaced with inner aliases...
-//todo disable constructors
-struct Implies(S) if (is(S == struct)) { //todo if isAnnotation?
+@GluedMagic
+struct Implies(S) 
+    if (is(S == struct)) 
+{
     static assert(!hasUDA!(S, NonImplicable), "Annotation "~fullyQualifiedName!S~" is not implicable and as such cannot be used in Implies!(...)");
+    ///Annotation "brought" by the one annotated with Implies
     const S implicated = S.init;
     
-    template getImplicated(){
+    template getImplicated()
+    {
         alias getImplicated = Alias!(S.init);
     }
 }
 
-struct Implies(alias S) if (is(typeof(S) == struct)) { //todo ditto
+@GluedMagic
+struct Implies(alias S) 
+    if (is(typeof(S) == struct)) 
+{
     static assert(!hasUDA!(typeof(S), NonImplicable), "Annotation "~fullyQualifiedName!(typeof(S))~" is not implicable and as such cannot be used in Implies!(...)");
+    
+    ///ditto
     const typeof(S) implicated = S; 
      
-    template getImplicated(){ 
+    template getImplicated()
+    { 
         alias getImplicated = Alias!(S); 
     } 
 }
 
-//todo sanitize these; maybe some documentational UDA?
-
-///UDA for "magic annotations" like OnParameter, that should be filtered out
-/// when retrieving target annotations
-//todo Implies is magic, checkedby and nonimplicable as well
-enum GluedMagic;
-
-//@Repeatable
-//@Target(TargetType.FUNCTION)
+//todo actually figure out parameter annotations instead of using this weird 'pointers'
 @GluedMagic
+@MagicUsage!(Repeatable, Target(TargetType.FUNCTION))
 struct OnParameter(size_t _paramIdx, alias _annotation)
 {
     enum paramIdx = _paramIdx;
@@ -72,9 +82,8 @@ struct OnParameter(size_t _paramIdx, alias _annotation)
     enum describesParam(string name, size_t idx) = (idx == paramIdx);
 }
 
-//@Repeatable
-//@Target(TargetType.FUNCTION)
 @GluedMagic
+@MagicUsage!(Repeatable, Target(TargetType.FUNCTION))
 struct OnParameter(string _paramName, alias _annotation)
 {
     enum paramName = _paramName;

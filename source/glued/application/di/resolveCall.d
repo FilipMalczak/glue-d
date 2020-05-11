@@ -29,7 +29,7 @@ auto resolveCall(alias Def, F...)(Dejector injector, F foo)
 
 
     static string generateResolvedExpression(){
-        //todo extension point when we introduce environment (key/val config)
+        //extension point when we introduce environment (key/val config)
         string result = "toCall(";
         string[] params;
         static foreach (i, p; P){

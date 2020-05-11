@@ -8,7 +8,8 @@ import glued.annotations.core_annotations;
 import glued.annotations.validation_impl;
 import glued.utils: ofType, toType, toAnnotableType;
 
-private struct ParameterPointer(alias Foo){
+private struct ParameterPointer(alias Foo)
+{
     alias Target = Foo;
     string paramName;
     size_t paramIdx;
@@ -106,7 +107,9 @@ template getExplicitAnnotations(alias M)
 {
     enum isParamPointer(alias X) = __traits(hasMember, X, "Target") &&
                                     __traits(hasMember, X, "paramName") &&
-                                    __traits(hasMember, X, "paramIdx"); //todo check types of these fields
+                                    is(typeof(X.paramName) == string) &&
+                                    __traits(hasMember, X, "paramIdx") &&
+                                    is(typeof(X.paramIdx) == size_t);
     static if (isParamPointer!M)
     {
         
