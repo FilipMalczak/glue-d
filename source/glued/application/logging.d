@@ -38,13 +38,13 @@ class FilteringSink: LogSink {
     }
 }
 
-alias PathExtractor = string delegate(LogEvent);
+alias PathExtractor = Path delegate(LogEvent);
 
 struct ModuleExtractors {
     @property
-    static PathExtractor fromLogger() { return toDelegate((LogEvent e) => e.loggerLocation.moduleName); }
+    static PathExtractor fromLogger() { return toDelegate((LogEvent e) => Path.parse(e.loggerLocation.moduleName)); }
     @property
-    static PathExtractor fromEvent() { return toDelegate((LogEvent e) => e.eventLocation.moduleName); }
+    static PathExtractor fromEvent() { return toDelegate((LogEvent e) => Path.parse(e.eventLocation.moduleName)); }
 }
 
 Predicate!LogEvent levelConfig(PathTreeView!Level config, PathExtractor extractor=ModuleExtractors.fromEvent, Level defaultLevel=Level.ANY){

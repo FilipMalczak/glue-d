@@ -34,7 +34,7 @@ class Environment {
         log.debug_.emit("Feeding environment from ", asset);
         auto aa = parseProperties(asset.content);
         foreach(k; aa.keys()){
-            backend.put(k, EnvironmentEntry(aa[k], asset));
+            backend.put(Path.parse(k), EnvironmentEntry(aa[k], asset));
         }
     }
     
@@ -53,11 +53,11 @@ class Environment {
         }
         
         Optional!string find(string path){
-            return environment.backend.get(path).map!(x => x.text).toOptional;
+            return environment.backend.get(Path.parse(path)).map!(x => x.text).toOptional;
         }
         
         Optional!string resolve(string path){
-            return environment.backend.resolve(path).map!(x => x.text).toOptional;
+            return environment.backend.resolve(Path.parse(path)).map!(x => x.text).toOptional;
         }
     }
     
@@ -74,11 +74,11 @@ class Environment {
         }
         
         Optional!Asset find(string path){
-            return environment.backend.get(path).map!(x => x.source).toOptional;
+            return environment.backend.get(Path.parse(path)).map!(x => x.source).toOptional;
         }
         
         Optional!Asset resolve(string path){
-            return environment.backend.resolve(path).map!(x => x.source).toOptional;
+            return environment.backend.resolve(Path.parse(path)).map!(x => x.source).toOptional;
         }
     }
     
@@ -95,11 +95,11 @@ class Environment {
         }
         
         Optional!EnvironmentEntry find(string path){
-            return environment.backend.get(path);
+            return environment.backend.get(Path.parse(path));
         }
         
         Optional!EnvironmentEntry resolve(string path){
-            return environment.backend.resolve(path);
+            return environment.backend.resolve(Path.parse(path));
         }
     }
     

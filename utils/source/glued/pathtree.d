@@ -10,6 +10,74 @@ import std.string: strip;
 
 import optional;
 
+struct Path 
+{
+    enum SEPARATOR = ".";
+    
+    enum EMPTY = Path([]);
+
+    private string[] _components;
+    
+    this(string[] _components)
+    {
+        this._components = _components;
+    }
+    
+    static parse(string path, string separator=SEPARATOR)
+    {
+        return Path(path.split(separator).array);
+    }
+    
+    @property
+    string[] components()
+    {
+        return _components[];
+    }
+    
+    @property
+    string fullPath(string separator=SEPARATOR)
+    {
+        return _components.join(separator);
+    }
+    
+    @property
+    bool empty()
+    {
+        return _components.empty;
+    }
+    
+    Optional!string head()
+    {
+        if (empty)
+            return no!string;
+        return _components[0].some;
+    }
+    
+    @property
+    Path tail()
+    {
+        return Path(_components[1..$]);
+    }
+    
+    @property
+    Optional!string name()
+    {
+        if (empty)
+            return no!string;
+        return _components[$-1].some;
+    }
+    
+    Path child(string name)
+    {
+        return Path(_components ~ [name]);
+    }
+    
+    Path join(Path another)
+    {
+        return Path(_components ~ another._components);
+    }
+}
+
 /**
  * Data structure that wraps the actual value of the node with metadata used
  * for versioning of node values.
@@ -65,17 +133,17 @@ interface ValueChain(Data) {
  * to inspect not only the value obtained from resolution, but also its
  * origins.
  */
-alias ValueChainWithCoordinates(Data) = Tuple!(ValueChain!Data, "valueChain", string, "realPath");
+alias ValueChainWithCoordinates(Data) = Tuple!(ValueChain!Data, "valueChain", Path, "realPath");
 
 class PathTreeNode(Data) {
     alias Link = ValueChain!Data;
     alias LinkWithCoordinates = ValueChainWithCoordinates!Data;
     
-    private string fullPath;
+    private Path fullPath;
     private PathTreeNode!Data[string] children;
     private Optional!(Link) valueChain = no!(Link); //todo rename to valueChain
     
-    this(string path){
+    this(Path path){
         fullPath = path;
     }
     
@@ -83,76 +151,61 @@ class PathTreeNode(Data) {
     // WRITE STACK
     // impl
     
-    private void put(string[] pathComponents, Data data){
+    void put(Path path, Data data){
         //todo this introduces a silent feature - root can have value, paths can start and end with dots - cover that with tests! or check some conditions in public put
-        pathComponents = pathComponents.filter!(x => !x.strip().empty).array;
-        if (pathComponents.empty){
+        if (path.empty){
             size_t nextVersion = (valueChain.empty ? -1 : valueChain.front().versionNo) + 1;
             auto prev = valueChain;
             Link newValueChain = Link.of(nextVersion, data.some, prev);
             valueChain = newValueChain.some;
         } else {
-            auto head = pathComponents[0];
-            auto tail = pathComponents[1..$];
-            if (!(head in children)){
-                string childPath = (this.fullPath.empty ? "" : this.fullPath~".")~head;
-                children[head] = new PathTreeNode!Data(childPath);
+            if (!(path.head.front() in children)){
+                auto childPath = this.fullPath.child(path.head.front());
+                children[path.head.front()] = new PathTreeNode!Data(childPath);
             }
-            children[head].put(tail, data);
+            children[path.head.front()].put(path.tail, data);
         }
     }
     
-    void put(string path, Data data){
-        put(path.split("."), data);
-    }
-    
-    private Optional!Link getValueChain(string[] pathComponents){
-        if (pathComponents.empty){
+    Optional!Link getValueChain(Path path){
+        if (path.empty){
             return valueChain;
         } else {
-            return pathComponents[0] in children ? 
-                    children[pathComponents[0]].getValueChain(pathComponents[1..$]) : 
+            return path.head.front() in children ? 
+                    children[path.head.front()].getValueChain(path.tail) : 
                     no!Link;
         }
     }
     
-    private Optional!LinkWithCoordinates resolveValueChainWithCoordinates(string[] pathComponents, string upToRoot){
-        if (pathComponents.empty){
+    Optional!LinkWithCoordinates resolveValueChainWithCoordinates(Path path, Path upToRoot=Path.EMPTY){
+        if (path.empty){
             return valueChain.map!(x => LinkWithCoordinates(x, fullPath)).toOptional;
         }
-        auto deeperResult = pathComponents[0] in children ? 
-                                children[pathComponents[0]].resolveValueChainWithCoordinates(pathComponents[1..$], upToRoot) : 
+        auto deeperResult = path.head.front() in children ? 
+                                children[path.head.front()].resolveValueChainWithCoordinates(path.tail, upToRoot) : 
                                 no!LinkWithCoordinates;
-        if (deeperResult.empty && fullPath.startsWith(upToRoot)){
+        if (deeperResult.empty && fullPath.components.startsWith(upToRoot.components)){
             return valueChain.map!(x => LinkWithCoordinates(x, fullPath)).toOptional;
         }
         return deeperResult;
     }
-    
-    Optional!Link getValueChain(string path) {
-        return getValueChain(path.split("."));
-    }
-    
-    Optional!LinkWithCoordinates resolveValueChainWithCoordinates(string path, string upToRoot="") {
-        return resolveValueChainWithCoordinates(path.split("."), upToRoot);
-    }
-    
 }
 
-alias PathMapper = string delegate(string); // viewPath -> backendPath
+alias PathMapper = Path delegate(Path); // viewPath -> backendPath
 //toddo consider ValueMapper(T, T2) = T2 delegate(string, T); //(viewPath, backendValue) -> viewValue
 alias ValueMapper(T, T2) = T2 delegate(T);
 
+
 interface PathTreeView(Data){
-    Optional!(ValueChain!Data) getValueChain(string path);
+    Optional!(ValueChain!Data) getValueChain(Path path);
     
-    Optional!(ValueChain!Data) resolveValueChain(string path, string upToRoot="");
+    Optional!(ValueChain!Data) resolveValueChain(Path path, Path upToRoot=Path.EMPTY);
     
     /**
      * Returns: $(D_PSYMBOL some) over data stored under this exact $(D_PSYMBOL path); 
      * empty optional if no value was assigned.
      */
-    final Optional!Data get(string path) {
+    final Optional!Data get(Path path) {
         return getValueChain(path).map!(x => x.data).joiner.toOptional;
     }
     
@@ -160,7 +213,7 @@ interface PathTreeView(Data){
      * Returns: $(D_PSYMBOL some) over version number (counted from 0) of data 
      * stored under this exact $(D_PSYMBOL path); empty optional if no value was assigned.
      */
-    final Optional!size_t getVersion(string path) {
+    final Optional!size_t getVersion(Path path) {
         return getValueChain(path).map!(x => x.versionNo).toOptional;
     }
     
@@ -169,21 +222,17 @@ interface PathTreeView(Data){
      * its closest ancestor; empty optional if no value was assigned anywhere 
      * from that node up to the root of the tree.
      */
-    final Optional!Data resolve(string path, string upToRoot="") {
+    final Optional!Data resolve(Path path, Path upToRoot=Path.EMPTY) {
         return resolveValueChain(path, upToRoot).map!(x => x.data).joiner.toOptional;
     }
     
-    final Optional!size_t resolveVersion(string path, string upToRoot="") {
+    final Optional!size_t resolveVersion(Path path, Path upToRoot=Path.EMPTY) {
         return resolveValueChain(path, upToRoot).map!(x => x.versionNo).toOptional;
     }
     
-    private static string joinPaths(string a, string b){
-        return cast(string) (a.split(".") ~ b.split(".")).filter!(x => !x.strip.empty).join(".");
-    }
-    
-    final PathTreeView!Data subtree(string from){
+    final PathTreeView!Data subtree(Path from){
         assert(!from.empty);//todo exception
-        return mapPaths((string s) => joinPaths(from, s));
+        return mapPaths((Path s) => from.join(s));
     }
     
     final PathTreeView!Data mapPaths(PathMapper mapper){
@@ -196,11 +245,11 @@ interface PathTreeView(Data){
                 this.foo = foo;
             }
             
-            Optional!(ValueChain!Data) getValueChain(string path){
+            Optional!(ValueChain!Data) getValueChain(Path path){
                 return wrapped.getValueChain(foo(path));
             }
     
-            Optional!(ValueChain!Data) resolveValueChain(string path, string upToRoot=""){
+            Optional!(ValueChain!Data) resolveValueChain(Path path, Path upToRoot=Path.EMPTY){
                 return wrapped.resolveValueChain(foo(path), foo(upToRoot));
             }
         }
@@ -245,13 +294,13 @@ interface PathTreeView(Data){
                 this.foo = foo;
             }
             
-            Optional!(ValueChain!NewData) getValueChain(string path){
+            Optional!(ValueChain!NewData) getValueChain(Path path){
                 return wrapped.getValueChain(path)
                     .map!(x => cast(ValueChain!NewData) new MappedLink(x, foo))
                     .toOptional;
             }
     
-            Optional!(ValueChain!NewData) resolveValueChain(string path, string upToRoot=""){
+            Optional!(ValueChain!NewData) resolveValueChain(Path path, Path upToRoot=Path.EMPTY){
                 return wrapped.resolveValueChain(path, upToRoot)
                     .map!(x => cast(ValueChain!NewData) new MappedLink(x, foo))
                     .toOptional;
@@ -271,11 +320,11 @@ abstract class PathTree(Data): PathTreeView!Data {
      * already had value, replace it with $(D_PSYMBOL data), but increment value 
      * version and keep reference to previous value.
      */
-    void put(string path, Data data);
+    void put(Path path, Data data);
     
-    Optional!LinkWithCoordinates resolveValueChainWithCoordinates(string path, string upToRoot="");
+    Optional!LinkWithCoordinates resolveValueChainWithCoordinates(Path path, Path upToRoot=Path.EMPTY);
     
-    final override Optional!Link resolveValueChain(string path, string upToRoot="") {
+    final override Optional!Link resolveValueChain(Path path, Path upToRoot=Path.EMPTY) {
         return resolveValueChainWithCoordinates(path, upToRoot).map!(x => x.valueChain).toOptional;
     }
     
@@ -284,7 +333,7 @@ abstract class PathTree(Data): PathTreeView!Data {
      * $(D_PSYMBOL resolve(path)) wrapped into optional; empty if aforementioned 
      * call would result in empty optional.
      */
-    final Optional!string resolveCoordinates(string path, string upToRoot="") {
+    final Optional!Path resolveCoordinates(Path path, Path upToRoot=Path.EMPTY) {
         return resolveValueChainWithCoordinates(path, upToRoot).map!(x => x.realPath).toOptional;
     }
     
@@ -308,17 +357,17 @@ abstract class PathTree(Data): PathTreeView!Data {
  * log levels.
  */
 class ConcretePathTree(Data): PathTree!Data {
-    private PathTreeNode!Data root = new PathTreeNode!Data("");
+    private PathTreeNode!Data root = new PathTreeNode!Data(Path.EMPTY);
     
-    override void put(string path, Data data){
+    override void put(Path path, Data data){
         root.put(path, data);
     }
     
-    Optional!Link getValueChain(string path) { //todo untested
+    Optional!Link getValueChain(Path path) { //todo untested
         return root.getValueChain(path);
     }
 
-    override Optional!LinkWithCoordinates resolveValueChainWithCoordinates(string path, string upToRoot="") { //todo untested
+    override Optional!LinkWithCoordinates resolveValueChainWithCoordinates(Path path, Path upToRoot=Path.EMPTY) { //todo untested
         return root.resolveValueChainWithCoordinates(path, upToRoot);
     }
     
@@ -329,37 +378,37 @@ class ConcretePathTree(Data): PathTree!Data {
 unittest {
     PathTree!string tree = new ConcretePathTree!string;
 
-    tree.put("abc.def.g", "x");
-    tree.put("abc.def.g", "y");
+    tree.put(Path.parse("abc.def.g"), "x");
+    tree.put(Path.parse("abc.def.g"), "y");
 
-    assert(tree.get("abc.def.g") == "y".some);
-    assert(tree.getVersion("abc.def.g") == 1.some);
+    assert(tree.get(Path.parse("abc.def.g")) == "y".some);
+    assert(tree.getVersion(Path.parse("abc.def.g")) == 1.some);
     
-    assert(tree.get("abc.def.g.h") == no!string);
-    assert(tree.getVersion("abc.def.g.h") == no!size_t);
+    assert(tree.get(Path.parse("abc.def.g.h")) == no!string);
+    assert(tree.getVersion(Path.parse("abc.def.g.h")) == no!size_t);
     
-    assert(tree.resolve("abc.def.g.h") == "y".some);
-    assert(tree.resolveVersion("abc.def.g.h") == 1.some);
-    assert(tree.resolveCoordinates("abc.def.g.h") == "abc.def.g".some);
+    assert(tree.resolve(Path.parse("abc.def.g.h")) == "y".some);
+    assert(tree.resolveVersion(Path.parse("abc.def.g.h")) == 1.some);
+    assert(tree.resolveCoordinates(Path.parse("abc.def.g.h")) == Path.parse("abc.def.g").some);
     
-    auto mappedPaths = tree.subtree("abc");
-    assert(mappedPaths.get("def.g") == "y".some);
-    assert(mappedPaths.getVersion("def.g") == 1.some);
+    auto mappedPaths = tree.subtree(Path.parse("abc"));
+    assert(mappedPaths.get(Path.parse("def.g")) == "y".some);
+    assert(mappedPaths.getVersion(Path.parse("def.g")) == 1.some);
     
-    assert(mappedPaths.resolve("def.g.h") == "y".some);
-    assert(mappedPaths.resolveVersion("def.g.h") == 1.some);
+    assert(mappedPaths.resolve(Path.parse("def.g.h")) == "y".some);
+    assert(mappedPaths.resolveVersion(Path.parse("def.g.h")) == 1.some);
     
-    mappedPaths = mappedPaths.subtree("def");
-    assert(mappedPaths.get("g") == "y".some);
-    assert(mappedPaths.getVersion("g") == 1.some);
+    mappedPaths = mappedPaths.subtree(Path.parse("def"));
+    assert(mappedPaths.get(Path.parse("g")) == "y".some);
+    assert(mappedPaths.getVersion(Path.parse("g")) == 1.some);
     
-    assert(mappedPaths.resolve("g.h") == "y".some);
-    assert(mappedPaths.resolveVersion("g.h") == 1.some);
+    assert(mappedPaths.resolve(Path.parse("g.h")) == "y".some);
+    assert(mappedPaths.resolveVersion(Path.parse("g.h")) == 1.some);
     
     auto mappedKeys = mappedPaths.mapValues!size_t(x => x.length);
-    assert(mappedKeys.get("g") == 1.some);
-    assert(mappedKeys.getVersion("g") == 1.some);
+    assert(mappedKeys.get(Path.parse("g")) == 1.some);
+    assert(mappedKeys.getVersion(Path.parse("g")) == 1.some);
     
-    assert(mappedKeys.resolve("g.h") == 1.some);
-    assert(mappedKeys.resolveVersion("g.h") == 1.some);
+    assert(mappedKeys.resolve(Path.parse("g.h")) == 1.some);
+    assert(mappedKeys.resolveVersion(Path.parse("g.h")) == 1.some);
 }
