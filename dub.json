@@ -40,6 +40,7 @@
 	"name": "glue-d",
 	"subPackages": [
 		"./indexer/",
+		"./context/",
 		"./codescan/",
 		"./utils/",
 		"./logging/",
