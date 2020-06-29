@@ -7,6 +7,8 @@ import std.traits;
 import glued.annotations;
 import glued.logging;
 
+import glued.adhesives.environment;
+
 import glued.application.di.annotations;
 import glued.application.di.resolveCall;
 
@@ -51,11 +53,13 @@ class InstanceInitializer(T, bool checkNulls): Initializer
 {
     mixin CreateLogger;
     private Dejector injector;
+    private Environment environment;
     private Logger log;
 
     this(Dejector injector)
     {
         this.injector = injector;
+        environment = injector.get!Environment;
         log = Logger(injector.get!(LogSink));
     }
 
@@ -74,6 +78,8 @@ class InstanceInitializer(T, bool checkNulls): Initializer
     {
         enum isPublic(string name) = __traits(getProtection, __traits(getMember, T, name)) == "public";
         enum isAutowired(string name) = hasOneAnnotation!(__traits(getMember, T, name), Autowire);
+        enum isValueInjected(string name) = hasOneAnnotation!(__traits(getMember, T, name), Value);
+        enum isPrimitive(string name) = isScalarType!(typeof(__traits(getMember, T, name)));
         auto hasNullValue(string name)()
         {
             return __traits(getMember, t, name) is null;
@@ -81,27 +87,41 @@ class InstanceInitializer(T, bool checkNulls): Initializer
         
         static foreach (i, name; FieldNameTuple!T)
         {
-            static if (isPublic!name && isAutowired!name)
+            static if (isPublic!name)
             {
-                mixin("import "~moduleName!(queryForField!(T, name))~";");
-                static if (checkNulls) 
+                static if (isAutowired!name)
+                //todo check if interface/object field
                 {
-                    if (hasNullValue!name()) 
+                    mixin("import "~moduleName!(queryForField!(T, name))~";");
+                    static if (checkNulls) 
                     {
-                        log.debug_.emit("Injecting field ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " after null check");
-                        __traits(getMember, t, name) = this.injector.get!(queryForField!(T, name));
-                        log.debug_.emit("Injected field ", name, " after null check");
+                        if (hasNullValue!name()) 
+                        {
+                            log.debug_.emit("Injecting field ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " after null check");
+                            __traits(getMember, t, name) = this.injector.get!(queryForField!(T, name));
+                            log.debug_.emit("Injected field ", name, " after null check");
+                        } 
+                        else 
+                        {
+                            log.debug_.emit("Field ", name, " didn't pass null check (value=", __traits(getMember, t, name), ")");
+                        }
                     } 
                     else 
                     {
-                        log.debug_.emit("Field ", name, " didn't pass null check (value=", __traits(getMember, t, name), ")");
+                        log.debug_.emit("Injecting field ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " with no null check");
+                        __traits(getMember, t, name) = this.injector.get!(queryForField!(T, name));
+                        log.debug_.emit("Injected field ", name, " with no null check");
                     }
-                } 
-                else 
+                }
+                static if (isValueInjected!name)
                 {
-                    log.debug_.emit("Injecting field ", name, " with query ", fullyQualifiedName!(queryForField!(T, name)), " with no null check");
-                    __traits(getMember, t, name) = this.injector.get!(queryForField!(T, name));
-                    log.debug_.emit("Injected field ", name, " with no null check");
+//                    static if (isPrimitive!name)
+//                    {
+//                        import std.conv;
+//                        string envval = environment.
+//                    }
+//                    else
+                        static assert(false, "Support incoming!");
                 }
             }
         }

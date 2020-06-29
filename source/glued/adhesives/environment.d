@@ -1,4 +1,4 @@
-module glued.adhesives.config;
+module glued.adhesives.environment;
 
 import std.algorithm;
 
@@ -12,14 +12,13 @@ import properd;
 
 //todo no tests at all
 
-struct ConfigEntry {
+struct EnvironmentEntry {
     string text;
     Asset source;
 }
 
-//todo Environment seems more natural
 //todo would this gain anything from making previous value versions visible or reachable?
-class Config {
+class Environment {
     //todo CreateLogger -> DefineLogger; CreateLogger(name) = DefineLogger + Logger <name>
     mixin CreateLogger;
     Logger log;
@@ -28,36 +27,37 @@ class Config {
         log = Logger(sink);
     }
     
-    private PathTree!ConfigEntry backend = new ConcretePathTree!ConfigEntry();
+    private PathTree!EnvironmentEntry backend = new ConcretePathTree!EnvironmentEntry();
     
+    //todo this should become feed(PropertySource)
     void feed(Asset asset){
-        log.debug_.emit("Feeding config from ", asset);
+        log.debug_.emit("Feeding environment from ", asset);
         auto aa = parseProperties(asset.content);
         foreach(k; aa.keys()){
-            backend.put(k, ConfigEntry(aa[k], asset));
+            backend.put(k, EnvironmentEntry(aa[k], asset));
         }
     }
     
     //todo introduce interface ViewClosure(Result), normalize all closures, e.g. ValuesClosure: ViewClosure!string?
     
     @property
-    PathTreeView!ConfigEntry view(){
+    PathTreeView!EnvironmentEntry view(){
         return backend;
     }
     
     struct ValuesClosure {
-        private Config config;
+        private Environment environment;
          
         string get(string path){
             return find(path).front();
         }
         
         Optional!string find(string path){
-            return config.backend.get(path).map!(x => x.text).toOptional;
+            return environment.backend.get(path).map!(x => x.text).toOptional;
         }
         
         Optional!string resolve(string path){
-            return config.backend.resolve(path).map!(x => x.text).toOptional;
+            return environment.backend.resolve(path).map!(x => x.text).toOptional;
         }
     }
     
@@ -67,18 +67,18 @@ class Config {
     }
     
     struct SourcesClosure {
-        private Config config;
+        private Environment environment;
          
         Asset get(string path){
             return find(path).front();
         }
         
         Optional!Asset find(string path){
-            return config.backend.get(path).map!(x => x.source).toOptional;
+            return environment.backend.get(path).map!(x => x.source).toOptional;
         }
         
         Optional!Asset resolve(string path){
-            return config.backend.resolve(path).map!(x => x.source).toOptional;
+            return environment.backend.resolve(path).map!(x => x.source).toOptional;
         }
     }
     
@@ -88,18 +88,18 @@ class Config {
     }
     
     struct EntriesClosure {
-        private Config config;
+        private Environment environment;
          
-        ConfigEntry get(string path){
+        EnvironmentEntry get(string path){
             return find(path).front();
         }
         
-        Optional!ConfigEntry find(string path){
-            return config.backend.get(path);
+        Optional!EnvironmentEntry find(string path){
+            return environment.backend.get(path);
         }
         
-        Optional!ConfigEntry resolve(string path){
-            return config.backend.resolve(path);
+        Optional!EnvironmentEntry resolve(string path){
+            return environment.backend.resolve(path);
         }
     }
     

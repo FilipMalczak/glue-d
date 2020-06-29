@@ -84,15 +84,18 @@ class GluedRuntime(alias scannables) {
     
     //todo test this by providing some small app with bunch of components; provide glued assets for their log levels, steer some with build time assets too; set targetSink manually, provide action that triggers these components methods (which do logging) and make sure that related events are prezent
     private void resolveLogSink(DeferredLogSink sink){
-        auto logFilteringTree = _injector
-            .get!Config
-            .view
-            .subtree("log.level")
-            .mapValues!Level(toDelegate((ConfigEntry v) => v.text.toLevel));
+    //todo ugly leftover
+//        auto logFilteringTree = _injector
+//            .get!Config
+//            .view
+//            .subtree("log.level")
+//            .mapValues!Level(toDelegate((ConfigEntry v) => v.text.toLevel));
         if (_targetSink is null)
             _targetSink = new StdoutSink; //todo build sink based on config (stdout/err, some storage, maybe composites?); what to do if _targetSink !is null?
         //todo levelConfig can also be tweaked via config
-        auto filteringSink = new FilteringSink(_targetSink, levelConfig(logFilteringTree));
+        //todo ugly leftover
+        //auto filteringSink = new FilteringSink(_targetSink, levelConfig(logFilteringTree));
+        auto filteringSink = new FilteringSink(_targetSink, x => true);
         sink.resolve(filteringSink);
     }
     

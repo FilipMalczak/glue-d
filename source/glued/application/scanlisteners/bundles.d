@@ -11,7 +11,7 @@ import glued.codescan.scannable;
 import glued.codescan.listener;
 
 import glued.adhesives.bundles;
-import glued.adhesives.config;
+import glued.adhesives.environment;
 
 import dejector;
 
@@ -37,16 +37,16 @@ class BundlesListener: ScanListener!Dejector
     private Logger log;
     private Dejector injector;
     private BundleRegistrar registrar;
-    private Config config;
+    private Environment environment;
 
     void init(Dejector injector)
     {
         this.injector = injector;
         log = Logger(injector.get!LogSink);
         registrar = new BundleRegistrar;
-        config = new Config(injector.get!LogSink);
+        environment = new Environment(injector.get!LogSink);
         injector.bind!(BundleRegistrar)(new InstanceProvider(registrar));
-        injector.bind!(Config)(new InstanceProvider(config));
+        injector.bind!(Environment)(new InstanceProvider(environment));
         registrar.register(new BuildTimeBundle);
     }
 
@@ -67,7 +67,7 @@ class BundlesListener: ScanListener!Dejector
     
     void onScannerFreeze()
     {
-        auto configAssets = registrar
+        auto environmentAssets = registrar
             .ls()
             .filter!(a => 
                 a.path.baseName == "logging.conf" ||
@@ -76,12 +76,12 @@ class BundlesListener: ScanListener!Dejector
         
         //1. scheme=glued
         //sort from top-level packages towards lower ones
-        auto gluedAssets = configAssets
+        auto gluedAssets = environmentAssets
             .filter!(a => a.scheme == "glued")
             .array //required so that result of prev step is random access range
             .sort!(assetComparator);
         foreach (a; gluedAssets)
-            config.feed(a);
+            environment.feed(a);
         
         //2. scheme=build
         //order defined in bundles adhesive
@@ -90,18 +90,18 @@ class BundlesListener: ScanListener!Dejector
             auto a = registrar.find("build", n);
             if (!a.empty)
             {
-                config.feed(a.front());
+                environment.feed(a.front());
             }
         }
 
         //3. others
         //ditto when it comes to sorting
-        auto otherAssets = configAssets
+        auto otherAssets = environmentAssets
             .filter!(a => a.scheme != "glued" && a.scheme != "build")
             .array //required so that result of prev step is random access range
             .sort!(assetComparator);
         foreach (a; otherAssets)
-            config.feed(a);
+            environment.feed(a);
         
         //TODO 4. files specified with CLI, in the order of specifying
     }

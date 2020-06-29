@@ -40,6 +40,12 @@ enum DefaultQuery;
 struct Autowire(T=DefaultQuery) {
     alias Query = T;
 }
+//todo Autowire(string)
+
+struct Value
+{
+    string name;
+}
 
 /**
  * Used to indicate that annotated target should not be injected, e.g. when
