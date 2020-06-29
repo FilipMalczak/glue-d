@@ -16,6 +16,8 @@ dub test glue-d:logging $CONFIG
 
 dub test glue-d:annotations $CONFIG
 
+dub test glue-d:context $CONFIG
+
 # codescan uses custom test qualifier
 dub run glue-d:codescan --config=indexer
 dub test glue-d:codescan $CONFIG

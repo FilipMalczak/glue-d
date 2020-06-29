@@ -37,6 +37,8 @@ script:
  - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F annotations || exit 0;'
  - "dub test glue-d:codescan -b unittest-cov --compiler=${DC}"
  - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F codescan || exit 0;'
+ - "dub test glue-d:context -b unittest-cov --compiler=${DC}"
+ - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F context || exit 0;'
  - "dub test glue-d:logging -b unittest-cov --compiler=${DC}"
  - '[ "$CI_CONTEXT" == "xenial_dmd" ] && bash <(curl -s https://codecov.io/bash) -c -F logging || exit 0;'
  - "dub test glue-d:utils -b unittest-cov --compiler=${DC}"

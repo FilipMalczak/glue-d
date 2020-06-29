@@ -134,6 +134,7 @@ build_script:
 
 test_script:
   - dub test glue-d:annotations %dubFlags%
+  - dub test glue-d:context %dubFlags%
   - dub test glue-d:codescan %dubFlags%
   - dub test glue-d:logging %dubFlags%
   - dub test glue-d:utils %dubFlags%
